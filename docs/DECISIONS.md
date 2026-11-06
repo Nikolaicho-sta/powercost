@@ -70,3 +70,29 @@ States use categorical slots 1-5 in fixed order (Active blue, Idle orange, Sleep
 
 ## D23 - Build layout
 The Tauri crate is a workspace member but not a default member: plain `cargo test` / `cargo build` skip it and need no frontend bundle. Building the app needs `npm run build` in `ui/` first (the bundle is embedded). `export-mock` writes real dashboard JSON from simulated data so the UI can be previewed in a plain browser.
+## D24 - Tariff catalogue: bundled presets are immutable, user tariffs are files
+Presets are compiled in; a user's tariffs are plain JSON files `<id>.v<version>.json` in `%APPDATA%\PowerCost\tariffs` (shareable, hand-editable; a country is added by dropping a file there, no code change). Bundled (id, version) pairs cannot be overwritten or deleted - the editor offers "Copy to edit" (new `user-...` id, marked unverified). Files that fail validation are listed, never fatal. A price change is a NEW VERSION of the same id with a later `valid_from`; pricing history uses all versions of the selected id. Saving a version of the active tariff reprices the detailed history from its `valid_from`; compacted days keep their old prices and the UI says so.
+
+## D25 - Region detection and the optional IP lookup
+Region is guessed locally: the timezone wins over the language (it is physical, the locale is a preference) and both are offered; the user always confirms. The only network call in the product is the opt-in IP lookup (`ipapi.co`), made by the UI after an explicit button press, allow-listed in the CSP and parsed defensively (only a 2-letter country code and a sanitised timezone are accepted). Documented in `docs/PRIVACY.md`.
+
+## D26 - Settings model and live apply
+Settings are one JSON document in the database with a default for every field (old documents keep loading), validated as a whole (all problems reported at once; an invalid document is never written). Saving bumps a version in shared state; the tracker thread notices it and swaps estimator, tariff versions, thresholds and gap assumptions without a restart.
+
+## D27 - Calibration wizard
+Plain instructions (wattmeter placement, laptop battery full, monitor excluded), idle + full + optional half-load point, a preview of the resulting curve, then the last N days (default 30) are re-estimated from the stored inputs. Decimal commas are accepted everywhere and normalised to dots (Bulgarian users type "24,5").
+
+## D28 - Budget alerts
+Evaluated by the tracker thread once a minute from the stored month-to-date cost (plus fixed fees if they are included). Each threshold fires once per calendar month; a jump past several thresholds gives one notification for the highest and marks all of them. The dashboard meter shows severity with a text label, not colour alone.
+
+## D29 - Exports
+CSV/JSON per hour or local day, split by state and tariff period, from minute rows plus compacted aggregates (so compaction never changes an export). Amounts are exact 6-decimal strings derived from the integer nano-units. JSON also carries the tariff, the estimate-method mix and a disclaimer. The path comes from the system save dialog; the command only writes `.csv`/`.json`.
+
+## D30 - Start with Windows
+A per-user `Run` registry value (`"<exe>" --tray`) written through `reg.exe`: no admin rights, no extra dependency. Tested against a throwaway key, never the real one; the app does not touch it in `--sim` mode.
+
+## D31 - Retention is now actually enforced
+The tracker thread compacts detail older than the retention setting (default 90 days) at start and every 6 hours, and prunes old heartbeats. Until M5 compaction existed but nothing called it.
+
+## D32 - Fixed monthly fees
+Off by default. When included, each local day carries 1/(days in that month) of the VAT-inclusive monthly amount, shown as its own line and in the grand total; energy figures are unchanged.

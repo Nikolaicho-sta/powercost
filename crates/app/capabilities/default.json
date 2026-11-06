@@ -3,5 +3,5 @@
   "identifier": "default",
   "description": "Main window: core events only. App commands are our own and read-only.",
   "windows": ["main"],
-  "permissions": ["core:default"]
+  "permissions": ["core:default", "notification:default", "dialog:default"]
 }

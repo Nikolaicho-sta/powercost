@@ -15,7 +15,7 @@ mod schema;
 
 pub use compaction::CompactionReport;
 pub use ingest::IngestResult;
-pub use queries::{Bucket, BucketRow, CostRow};
+pub use queries::{BreakdownRow, Bucket, BucketRow, CostRow};
 
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use chrono_tz::Tz;

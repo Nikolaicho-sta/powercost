@@ -189,6 +189,9 @@ impl Tracker {
     pub fn set_tariffs(&mut self, t: TariffSet) {
         self.tariffs = t;
     }
+    pub fn set_assumptions(&mut self, a: Assumptions) {
+        self.cfg.assumptions = a;
+    }
     pub fn set_thresholds(&mut self, t: Thresholds) {
         self.cfg.thresholds = t;
         self.detector.set_thresholds(t);

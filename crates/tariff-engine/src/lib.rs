@@ -8,9 +8,13 @@
 //! * For every season x day type, every minute of the day must be covered exactly once.
 //! * Money is `rust_decimal::Decimal`, never floats.
 
+mod catalog;
 mod model;
+mod region;
 
+pub use catalog::*;
 pub use model::*;
+pub use region::*;
 
 use chrono::{DateTime, Datelike, NaiveDate, NaiveDateTime, Timelike, Utc, Weekday};
 use chrono_tz::Tz;

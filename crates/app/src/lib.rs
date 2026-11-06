@@ -1,16 +1,20 @@
-//! PowerCost desktop shell: tray icon, window lifecycle, read-only commands for the UI and the
-//! background tracker thread. Local-first: no network access anywhere in this crate.
+//! PowerCost desktop shell: tray icon, window lifecycle, commands for the UI and the background
+//! tracker thread. Local-first: no network access anywhere in this crate (the optional IP region
+//! lookup is made by the UI only after the user opts in).
 //!
 //! Memory design: the tracker runs in this process; the WebView window is DESTROYED (not hidden)
 //! when closed, so the resident cost is the tracker only. Click the tray icon to recreate it.
 
+mod commands;
+mod state;
 mod tracker_thread;
 
 use chrono::Utc;
 use cost_engine::TariffSet;
-use dashboard::{CurrentInfo, Dashboard, PeriodKind, WhatIfParams, WhatIfResult};
+use dashboard::{CurrentInfo, PeriodKind};
 use estimator::{Estimator, EstimatorConfig};
-use serde::Serialize;
+use settings::Settings;
+use state::{build_catalog, AppState, Live, Shared};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
@@ -18,65 +22,7 @@ use storage::Storage;
 use tariff_engine::Tariff;
 use tauri::menu::MenuBuilder;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
-use tauri::{AppHandle, Manager, RunEvent, State, WebviewUrl, WebviewWindowBuilder};
-
-/// Tariff presets are data files compiled in; the tariff editor (M5) will add user copies.
-const DEFAULT_TARIFF: &str = include_str!("../../../tariffs/bg-electrohold.json");
-
-#[derive(Default)]
-pub struct Shared {
-    pub current: Option<CurrentInfo>,
-    pub issues: Vec<String>,
-    pub tracker_running: bool,
-}
-
-pub struct AppState {
-    pub db_path: PathBuf,
-    pub simulated: bool,
-    pub tariff: Tariff,
-    pub shared: Arc<Mutex<Shared>>,
-    pub stop: Arc<AtomicBool>,
-    pub tracker: Mutex<Option<std::thread::JoinHandle<()>>>,
-}
-
-#[derive(Serialize)]
-struct AppInfo {
-    simulated: bool,
-    preview: bool,
-    version: &'static str,
-    tracker_running: bool,
-    sensor_issues: Vec<String>,
-}
-
-fn open(state: &AppState) -> Result<Storage, String> {
-    Storage::open(&state.db_path).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-fn get_dashboard(state: State<AppState>, period: PeriodKind) -> Result<Dashboard, String> {
-    let store = open(&state)?;
-    let current = state.shared.lock().map_err(|e| e.to_string())?.current.clone();
-    dashboard::dashboard(&store, &state.tariff, period, Utc::now(), current).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-fn get_what_if(state: State<AppState>, params: WhatIfParams, days: u32) -> Result<WhatIfResult, String> {
-    let store = open(&state)?;
-    let to = Utc::now();
-    dashboard::what_if(&store, &state.tariff, &params, to - chrono::Duration::days(days.clamp(1, 90) as i64), to).map_err(|e| e.to_string())
-}
-
-#[tauri::command]
-fn get_app_info(state: State<AppState>) -> AppInfo {
-    let shared = state.shared.lock().expect("shared state");
-    AppInfo {
-        simulated: state.simulated,
-        preview: false,
-        version: env!("CARGO_PKG_VERSION"),
-        tracker_running: shared.tracker_running,
-        sensor_issues: shared.issues.clone(),
-    }
-}
+use tauri::{AppHandle, Manager, RunEvent, WebviewUrl, WebviewWindowBuilder};
 
 fn open_main_window(app: &AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
@@ -116,10 +62,12 @@ fn prepare_simulation(tariff: &Tariff) -> Result<PathBuf, String> {
     let mut store = Storage::open(&path).map_err(|e| e.to_string())?;
     store.record_spans(&spans, &TariffSet::single(tariff.clone())).map_err(|e| e.to_string())?;
     store.compact(now - chrono::Duration::days(90), tz).map_err(|e| e.to_string())?;
+    // a demo database skips the first-run wizard
+    Settings { first_run_done: true, ..Settings::default() }.save(&store).map_err(|e| e.join("; "))?;
     Ok(path)
 }
 
-fn update_tray(app: &AppHandle, text: &str) {
+pub(crate) fn update_tray(app: &AppHandle, text: &str) {
     if let Some(tray) = app.tray_by_id("main") {
         let _ = tray.set_tooltip(Some(text));
     }
@@ -130,21 +78,51 @@ pub fn run() {
     let simulated = args.iter().any(|a| a == "--sim");
     let start_in_tray = args.iter().any(|a| a == "--tray");
 
-    let tariff = Tariff::from_json(DEFAULT_TARIFF).expect("embedded tariff is valid");
-    let db_path = if simulated {
-        prepare_simulation(&tariff).expect("simulation database")
-    } else {
-        let dir = data_dir();
-        std::fs::create_dir_all(&dir).expect("data directory");
-        dir.join("powercost.db")
+    let dir = data_dir();
+    std::fs::create_dir_all(&dir).expect("data directory");
+    let catalog = build_catalog(&dir);
+    let default_tariff = catalog.current(&Settings::default().tariff_id, Utc::now().date_naive()).expect("bundled default tariff");
+
+    let db_path = if simulated { prepare_simulation(&default_tariff).expect("simulation database") } else { dir.join("powercost.db") };
+    let settings = {
+        let store = Storage::open(&db_path).expect("database");
+        Settings::load(&store).unwrap_or_default()
+    };
+    let live = Live::resolve(&catalog, settings, 1).expect("an available tariff");
+
+    let state = AppState {
+        db_path,
+        data_dir: dir,
+        simulated,
+        catalog: Mutex::new(catalog),
+        live: Arc::new(Mutex::new(live)),
+        shared: Arc::new(Mutex::new(Shared::default())),
+        stop: Arc::new(AtomicBool::new(false)),
+        tracker: Mutex::new(None),
     };
 
-    let shared = Arc::new(Mutex::new(Shared::default()));
-    let state = AppState { db_path, simulated, tariff, shared, stop: Arc::new(AtomicBool::new(false)), tracker: Mutex::new(None) };
-
     let app = tauri::Builder::default()
+        .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(state)
-        .invoke_handler(tauri::generate_handler![get_dashboard, get_what_if, get_app_info])
+        .invoke_handler(tauri::generate_handler![
+            commands::get_dashboard,
+            commands::get_what_if,
+            commands::get_app_info,
+            commands::get_settings,
+            commands::save_settings,
+            commands::list_tariffs,
+            commands::get_tariff,
+            commands::validate_tariff,
+            commands::save_tariff,
+            commands::delete_tariff,
+            commands::detect_region,
+            commands::presets_for_country,
+            commands::save_calibration,
+            commands::reprice_history,
+            commands::export_data,
+            commands::send_test_notification,
+        ])
         .setup(move |app| {
             let menu = MenuBuilder::new(app).text("open", "Open dashboard").separator().text("quit", "Quit PowerCost").build()?;
             TrayIconBuilder::with_id("main")
@@ -173,7 +151,7 @@ pub fn run() {
                 }
                 update_tray(app.handle(), "PowerCost (simulated data)");
             } else {
-                let handle = tracker_thread::spawn(app.handle().clone(), state.db_path.clone(), state.tariff.clone(), state.shared.clone(), state.stop.clone());
+                let handle = tracker_thread::spawn(app.handle().clone(), state.db_path.clone(), state.live.clone(), state.shared.clone(), state.stop.clone());
                 *state.tracker.lock().expect("tracker handle") = Some(handle);
             }
 

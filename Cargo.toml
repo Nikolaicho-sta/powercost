@@ -1,7 +1,7 @@
 [workspace]
 resolver = "2"
-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/app"]
-default-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools"]
+members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend", "crates/app"]
+default-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend"]
 
 [workspace.package]
 edition = "2021"

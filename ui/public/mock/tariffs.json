@@ -1,0 +1,67 @@
+{
+  "presets": [
+    {
+      "country": "BG",
+      "currency": "EUR",
+      "distributor": "EVN",
+      "id": "bg-evn",
+      "name": "EVN - household, two-zone, regulated (UNVERIFIED)",
+      "source": "bundled",
+      "valid_from": "2026-07-01",
+      "valid_to": null,
+      "verification": "unverified",
+      "version": 2026
+    },
+    {
+      "country": "BG",
+      "currency": "EUR",
+      "distributor": "Electrohold",
+      "id": "bg-electrohold",
+      "name": "Electrohold (Electrohold Prodazhbi) - household, two-zone, regulated",
+      "source": "bundled",
+      "valid_from": "2026-07-01",
+      "valid_to": null,
+      "verification": "partial",
+      "version": 2026
+    },
+    {
+      "country": "BG",
+      "currency": "EUR",
+      "distributor": "Energo-Pro",
+      "id": "bg-energo-pro",
+      "name": "Energo-Pro - household, two-zone, regulated (PARTIALLY VERIFIED)",
+      "source": "bundled",
+      "valid_from": "2026-07-01",
+      "valid_to": null,
+      "verification": "partial",
+      "version": 2026
+    },
+    {
+      "country": "DE",
+      "currency": "EUR",
+      "distributor": null,
+      "id": "example-de-flat",
+      "name": "EXAMPLE - Germany flat tariff (structure only, made-up price)",
+      "source": "bundled",
+      "valid_from": "2026-01-01",
+      "valid_to": null,
+      "verification": "example",
+      "version": 1
+    },
+    {
+      "country": "GB",
+      "currency": "GBP",
+      "distributor": null,
+      "id": "example-uk-economy7",
+      "name": "EXAMPLE - UK Economy 7 style (structure only, made-up prices)",
+      "source": "bundled",
+      "valid_from": "2026-01-01",
+      "valid_to": null,
+      "verification": "example",
+      "version": 1
+    }
+  ],
+  "problems": [],
+  "selected_id": "bg-electrohold",
+  "user_dir": "(preview)"
+}

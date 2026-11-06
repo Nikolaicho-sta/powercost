@@ -147,3 +147,59 @@ impl Storage {
             .collect())
     }
 }
+
+/// One export row: a bucket x state x tariff period.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct BreakdownRow {
+    pub start: DateTime<Utc>,
+    pub local_start: NaiveDateTime,
+    pub state: PowerState,
+    pub period_id: String,
+    pub totals: Totals,
+}
+
+impl Storage {
+    /// Rows for exports: per hour or per LOCAL day, split by state and tariff period, combining
+    /// minute rows with compacted aggregates (hourly rows for `Hour`, daily rows for `Day`).
+    pub fn breakdown_rows(&self, from: DateTime<Utc>, to: DateTime<Utc>, tz: Tz, bucket: Bucket) -> Result<Vec<BreakdownRow>> {
+        assert!(matches!(bucket, Bucket::Hour | Bucket::Day), "exports are hourly or daily");
+        let mut acc: BTreeMap<(DateTime<Utc>, String, String), Totals> = BTreeMap::new();
+        let key_of = |t: DateTime<Utc>| match bucket {
+            Bucket::Day => local_midnight(t.with_timezone(&tz).date_naive(), tz),
+            _ => ts_to_dt(t.timestamp() - t.timestamp().rem_euclid(3600)),
+        };
+        for r in self.cost_rows(from, to)? {
+            add(acc.entry((key_of(r.minute), state_str(r.state).to_string(), r.period_id)).or_default(), &Totals { seconds: r.seconds, kwh_nano: r.kwh_nano, cost_nano: r.cost_nano });
+        }
+        if bucket == Bucket::Hour {
+            let mut st = self.conn.prepare_cached(
+                "SELECT hour_ts,state,period_id,seconds,kwh_nano,cost_nano FROM agg_hourly WHERE hour_ts>=?1 AND hour_ts<?2",
+            )?;
+            let rows = st.query_map(params![from.timestamp(), to.timestamp()], |r| {
+                Ok((r.get::<_, i64>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?, r.get::<_, i64>(3)?, r.get::<_, i64>(4)?, r.get::<_, i64>(5)?))
+            })?;
+            for row in rows {
+                let (h, s, p, secs, k, c) = row?;
+                add(acc.entry((ts_to_dt(h), s, p)).or_default(), &Totals { seconds: secs, kwh_nano: k, cost_nano: c });
+            }
+        } else {
+            let (d0, d1) = (from.with_timezone(&tz).date_naive(), to.with_timezone(&tz).date_naive());
+            let mut st = self.conn.prepare_cached(
+                "SELECT day,state,period_id,seconds,kwh_nano,cost_nano FROM agg_daily WHERE day>=?1 AND day<=?2",
+            )?;
+            let rows = st.query_map(params![d0.to_string(), d1.to_string()], |r| {
+                Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?, r.get::<_, String>(2)?, r.get::<_, i64>(3)?, r.get::<_, i64>(4)?, r.get::<_, i64>(5)?))
+            })?;
+            for row in rows {
+                let (day, s, p, secs, k, c) = row?;
+                let date = NaiveDate::parse_from_str(&day, "%Y-%m-%d").map_err(|e| StorageError::Corrupt(e.to_string()))?;
+                add(acc.entry((local_midnight(date, tz), s, p)).or_default(), &Totals { seconds: secs, kwh_nano: k, cost_nano: c });
+            }
+        }
+        acc.into_iter()
+            .map(|((start, state, period_id), totals)| {
+                Ok(BreakdownRow { start, local_start: start.with_timezone(&tz).naive_local(), state: parse_state(&state)?, period_id, totals })
+            })
+            .collect()
+    }
+}

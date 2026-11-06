@@ -18,6 +18,8 @@ tauri-build = { version = "2", features = [] }
 
 [dependencies]
 tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-notification = "2"
+tauri-plugin-dialog = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 chrono = "0.4"
@@ -33,3 +35,5 @@ gap-classifier = { path = "../gap-classifier" }
 dashboard = { path = "../dashboard" }
 tracker = { path = "../tracker" }
 simulator = { path = "../simulator" }
+settings = { path = "../settings" }
+backend = { path = "../backend" }

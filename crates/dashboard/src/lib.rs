@@ -2,8 +2,10 @@
 //! money) so the frontend never does money arithmetic. Amounts are raw integers
 //! (`kwh_nano`, `cost_nano`, `seconds`); the UI only divides by 1e9 for display.
 
+mod export;
 mod whatif;
 
+pub use export::{export, ExportFormat, Granularity};
 pub use whatif::{what_if, Scenario, WhatIfParams, WhatIfResult};
 
 use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveDateTime, TimeZone, Utc};
@@ -185,6 +187,10 @@ pub struct Dashboard {
     pub confidence: ConfidenceMix,
     pub warnings: Vec<WarningDto>,
     pub current: Option<CurrentInfo>,
+    /// Present only when the user opted to include fixed monthly fees.
+    pub fixed_fees: Option<FixedFees>,
+    /// Energy cost (+ fixed fees when included), rounded once to minor units.
+    pub grand_total_minor: i64,
 }
 
 fn minor_digits(currency: &str) -> u32 {
@@ -192,6 +198,11 @@ fn minor_digits(currency: &str) -> u32 {
         "JPY" | "KRW" | "HUF" => 0,
         _ => 2,
     }
+}
+
+/// Human-readable tariff warnings (expired, unverified, stale...).
+pub fn warnings_for(tariff: &Tariff, today: NaiveDate) -> Vec<WarningDto> {
+    tariff.warnings(today).iter().map(warning_dto).collect()
 }
 
 fn warning_dto(w: &Warning) -> WarningDto {
@@ -264,12 +275,57 @@ fn expected_buckets(kind: PeriodKind, from: DateTime<Utc>, end: DateTime<Utc>, t
     out
 }
 
+/// Display options.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct DashOptions {
+    /// Add the tariff's fixed monthly fees (prorated per day) as a separate line and to the grand total.
+    pub include_fixed_fees: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FixedFees {
+    pub cost_nano: i64,
+    pub cost_minor: i64,
+}
+
+/// Fixed monthly fees (VAT included) for the local days in `[from, to)`: each day carries
+/// 1/days-in-month of the monthly amount. Rounded once, at the end.
+pub fn fixed_fees_nano(tariff: &Tariff, from: DateTime<Utc>, to: DateTime<Utc>) -> i64 {
+    use rust_decimal::prelude::ToPrimitive;
+    let monthly = tariff.monthly_fixed_gross();
+    if monthly.is_zero() || to <= from {
+        return 0;
+    }
+    let tz = tariff.tz();
+    let last = (to - Duration::seconds(1)).with_timezone(&tz).date_naive();
+    let mut day = from.with_timezone(&tz).date_naive();
+    let mut total = rust_decimal::Decimal::ZERO;
+    while day <= last {
+        let next_month = if day.month() == 12 { NaiveDate::from_ymd_opt(day.year() + 1, 1, 1) } else { NaiveDate::from_ymd_opt(day.year(), day.month() + 1, 1) }.unwrap();
+        let dim = (next_month - NaiveDate::from_ymd_opt(day.year(), day.month(), 1).unwrap()).num_days();
+        total += monthly / rust_decimal::Decimal::from(dim);
+        day = day.succ_opt().unwrap();
+    }
+    (total * rust_decimal::Decimal::from(pc_core::NANO)).round().to_i64().unwrap_or(0)
+}
+
 pub fn dashboard(
     store: &Storage,
     tariff: &Tariff,
     kind: PeriodKind,
     now: DateTime<Utc>,
     current: Option<CurrentInfo>,
+) -> Result<Dashboard, DashboardError> {
+    dashboard_with(store, tariff, kind, now, current, &DashOptions::default())
+}
+
+pub fn dashboard_with(
+    store: &Storage,
+    tariff: &Tariff,
+    kind: PeriodKind,
+    now: DateTime<Utc>,
+    current: Option<CurrentInfo>,
+    opts: &DashOptions,
 ) -> Result<Dashboard, DashboardError> {
     let tz = tariff.tz();
     let range = range_for(kind, now, tz);
@@ -327,8 +383,15 @@ pub fn dashboard(
         confidence: mix,
         warnings,
         current,
+        fixed_fees: None,
+        grand_total_minor: 0,
     };
     d.apply_digits(digits);
+    let fees_nano = if opts.include_fixed_fees { fixed_fees_nano(tariff, range.from, range.to) } else { 0 };
+    if opts.include_fixed_fees && fees_nano > 0 {
+        d.fixed_fees = Some(FixedFees { cost_nano: fees_nano, cost_minor: cost_engine::nano_to_minor(fees_nano, digits) });
+    }
+    d.grand_total_minor = cost_engine::nano_to_minor(d.total.cost_nano + fees_nano, digits);
     Ok(d)
 }
 

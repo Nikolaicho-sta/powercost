@@ -25,10 +25,16 @@ export function Hero({ d }: { d: Dashboard }) {
         Estimated cost - {LABEL[d.period]}
         <InfoTip text="Every figure is an estimate. Energy = estimated wall watts x time, priced per minute with the active tariff. The bar below shows how that wattage was obtained." />
       </div>
-      <div className="hero-value">≈ {money(d.total.cost_minor, d.currency, d.minor_digits)}</div>
+      <div className="hero-value">≈ {money(d.grand_total_minor, d.currency, d.minor_digits)}</div>
       <div className="hero-sub">
         {kwh(d.total.kwh_nano)} · {hours(d.total.seconds)} tracked · {d.tariff_name}
       </div>
+      {d.fixed_fees && (
+        <div className="hero-sub">
+          includes {money(d.fixed_fees.cost_minor, d.currency, d.minor_digits)} of fixed monthly fees (energy {money(d.total.cost_minor, d.currency, d.minor_digits)})
+        </div>
+      )}
+
       {known && (
         <div style={{ marginTop: 14 }}>
           <div className="segbar" role="img" aria-label="Estimate confidence mix">

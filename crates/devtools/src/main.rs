@@ -51,5 +51,17 @@ fn main() {
         let r = what_if(&store, &tariff, &p, from, to).unwrap();
         std::fs::write(out.join(format!("whatif-{shift}.json")), serde_json::to_string_pretty(&r).unwrap()).unwrap();
     }
+    // tariff catalogue for the editor preview
+    let mut catalog = tariff_engine::Catalog::new();
+    for f in ["bg-electrohold.json", "bg-evn.json", "bg-energo-pro.json", "examples/de-flat.json", "examples/uk-economy7.json"] {
+        let path = PathBuf::from("tariffs").join(f);
+        catalog.add_bundled(f, &std::fs::read_to_string(path).unwrap());
+    }
+    let list = serde_json::json!({ "presets": catalog.list(), "problems": catalog.problems, "selected_id": "bg-electrohold", "user_dir": "(preview)" });
+    std::fs::write(out.join("tariffs.json"), serde_json::to_string_pretty(&list).unwrap()).unwrap();
+    for p in catalog.list() {
+        let t = catalog.get(&p.id, p.version).unwrap();
+        std::fs::write(out.join(format!("tariff-{}-{}.json", p.id, p.version)), serde_json::to_string_pretty(t).unwrap()).unwrap();
+    }
     println!("wrote mock data to {}", out.display());
 }

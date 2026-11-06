@@ -45,6 +45,8 @@ export interface Dashboard {
   confidence: { measured_sensors_permille: number; calibrated_permille: number; default_model_permille: number };
   warnings: Warning[];
   current: Current | null;
+  fixed_fees: { cost_nano: number; cost_minor: number } | null;
+  grand_total_minor: number;
 }
 export interface Scenario {
   current_cost_nano: number;
@@ -73,6 +75,75 @@ export interface AppInfo {
   version: string;
   tracker_running: boolean;
   sensor_issues: string[];
+  data_dir?: string;
+  tariff_note?: string | null;
+  autostart_enabled?: boolean;
+}
+
+export type Theme = "system" | "light" | "dark";
+export interface CalibrationPoint { util_permille: number; watts: string }
+export interface EstimatorCfg {
+  psu_efficiency: string;
+  baseline_w: string;
+  per_drive_w: string;
+  include_monitor: boolean;
+  monitor_w: string;
+  sleep_w: string;
+  hibernate_w: string;
+  off_standby_w: string;
+  unplugged_when_off: boolean;
+  prefer_calibrated: boolean;
+  hardware: { cpu_tdp_w: string; cpu_idle_w: string; gpu_tdp_w: string | null; gpu_idle_w: string; drives: number };
+  calibration: { points: CalibrationPoint[] } | null;
+}
+export interface Settings {
+  first_run_done: boolean;
+  region: { country: string | null; confirmed: boolean; ip_lookup_opt_in: boolean };
+  tariff_id: string;
+  estimator: EstimatorCfg;
+  thresholds: {
+    input_idle_secs: number;
+    cpu_enter_percent: number;
+    cpu_exit_percent: number;
+    gpu_enter_percent: number;
+    gpu_exit_percent: number;
+    exit_debounce_ticks: number;
+  };
+  gap_assumptions: { crash: PowerStateName; unknown: PowerStateName };
+  budget: { monthly_minor: number; alert_percents: number[] } | null;
+  include_fixed_fees: boolean;
+  autostart: boolean;
+  theme: Theme;
+  detail_retention_days: number;
+}
+export interface PresetInfo {
+  id: string;
+  version: number;
+  name: string;
+  country: string;
+  distributor: string | null;
+  currency: string;
+  verification: "verified" | "partial" | "unverified" | "example" | null;
+  valid_from: string;
+  valid_to: string | null;
+  source: "bundled" | "user";
+}
+export interface TariffList { presets: PresetInfo[]; problems: string[]; selected_id: string; user_dir: string }
+export interface ValidationReport {
+  ok: boolean;
+  errors: string[];
+  warnings: Warning[];
+  prices: { period_id: string; label: string; excl_vat: string; gross: string }[];
+}
+export interface SaveTariffResult { info: PresetInfo; recomputed_spans: number | null; clipped_by_compaction: boolean }
+export interface RegionInfo { candidates: { country: string; source: "timezone" | "locale" }[]; suggestions: PresetInfo[] }
+export interface Reestimate { spans: number; clipped_by_compaction: boolean }
+export interface ExportRequest {
+  path: string;
+  format: "csv" | "json";
+  granularity: "hour" | "day";
+  fromDate: string;
+  toDate: string;
 }
 
 const inTauri = typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -87,6 +158,47 @@ async function mock<T>(file: string): Promise<T> {
   if (!res.ok) throw new Error(`mock ${file}: ${res.status}`);
   return res.json();
 }
+
+/** Tauri rejects with a string or, for validation failures, an array of strings. */
+export function errorLines(e: unknown): string[] {
+  if (Array.isArray(e)) return e.map(String);
+  if (e instanceof Error) return [e.message];
+  return [String(e)];
+}
+
+const PREVIEW_SETTINGS_KEY = "pc-preview-settings";
+
+function previewDefaults(): Settings {
+  return {
+    first_run_done: false,
+    region: { country: null, confirmed: false, ip_lookup_opt_in: false },
+    tariff_id: "bg-electrohold",
+    estimator: {
+      psu_efficiency: "0.85", baseline_w: "20", per_drive_w: "2.5", include_monitor: false, monitor_w: "25", sleep_w: "1",
+      hibernate_w: "0", off_standby_w: "1", unplugged_when_off: false, prefer_calibrated: true,
+      hardware: { cpu_tdp_w: "65", cpu_idle_w: "5", gpu_tdp_w: null, gpu_idle_w: "0", drives: 1 },
+      calibration: null,
+    },
+    thresholds: { input_idle_secs: 120, cpu_enter_percent: 20, cpu_exit_percent: 10, gpu_enter_percent: 25, gpu_exit_percent: 10, exit_debounce_ticks: 3 },
+    gap_assumptions: { crash: "off", unknown: "off" },
+    budget: null,
+    include_fixed_fees: false,
+    autostart: false,
+    theme: "system",
+    detail_retention_days: 90,
+  };
+}
+
+function previewLoad(): Settings {
+  try {
+    const raw = localStorage.getItem(PREVIEW_SETTINGS_KEY);
+    return raw ? { ...previewDefaults(), ...JSON.parse(raw) } : previewDefaults();
+  } catch {
+    return previewDefaults();
+  }
+}
+
+const PREVIEW_ONLY = ["This is the browser preview: saving, validation and exports run inside the PowerCost app."];
 
 export const api = {
   dashboard: (period: PeriodKind): Promise<Dashboard> =>
@@ -103,4 +215,65 @@ export const api = {
     inTauri
       ? invoke("get_app_info")
       : { simulated: true, preview: true, version: "preview", tracker_running: false, sensor_issues: [] },
+
+  getSettings: async (): Promise<Settings> => (inTauri ? invoke("get_settings") : previewLoad()),
+
+  /** Resolves with the saved settings, rejects with a list of problems. */
+  saveSettings: async (settings: Settings): Promise<Settings> => {
+    if (inTauri) return invoke("save_settings", { settings });
+    try {
+      localStorage.setItem(PREVIEW_SETTINGS_KEY, JSON.stringify(settings));
+    } catch {
+      /* preview only */
+    }
+    return settings;
+  },
+
+  listTariffs: async (): Promise<TariffList> => (inTauri ? invoke("list_tariffs") : mock("tariffs.json")),
+  getTariff: async (id: string, version: number): Promise<unknown> => (inTauri ? invoke("get_tariff", { id, version }) : mock(`tariff-${id}-${version}.json`)),
+  validateTariff: async (json: unknown): Promise<ValidationReport> =>
+    inTauri ? invoke("validate_tariff", { json }) : { ok: true, errors: [], warnings: [], prices: [] },
+  saveTariff: async (json: unknown, recomputeFrom: string | null): Promise<SaveTariffResult> => {
+    if (inTauri) return invoke("save_tariff", { json, recomputeFrom });
+    throw PREVIEW_ONLY;
+  },
+  deleteTariff: async (id: string, version: number): Promise<void> => {
+    if (inTauri) return invoke("delete_tariff", { id, version });
+    throw PREVIEW_ONLY;
+  },
+  detectRegion: async (locale: string, timezone: string): Promise<RegionInfo> => {
+    if (inTauri) return invoke("detect_region", { locale, timezone });
+    const list: TariffList = await mock("tariffs.json");
+    const country = timezone === "Europe/Sofia" || locale.endsWith("BG") ? "BG" : (locale.split("-")[1] ?? "").toUpperCase();
+    return { candidates: country ? [{ country, source: "timezone" }] : [], suggestions: list.presets.filter((p) => p.country === country) };
+  },
+  presetsForCountry: async (country: string): Promise<PresetInfo[]> => {
+    if (inTauri) return invoke("presets_for_country", { country });
+    return ((await mock("tariffs.json")) as TariffList).presets.filter((p) => p.country === country);
+  },
+  saveCalibration: async (points: CalibrationPoint[] | null, days: number): Promise<Reestimate> => {
+    if (inTauri) return invoke("save_calibration", { points, days });
+    const s = previewLoad();
+    s.estimator.calibration = points ? { points } : null;
+    await api.saveSettings(s);
+    return { spans: 0, clipped_by_compaction: false };
+  },
+  repriceHistory: async (days: number): Promise<number> => {
+    if (inTauri) return invoke("reprice_history", { days });
+    throw PREVIEW_ONLY;
+  },
+  exportData: async (req: ExportRequest): Promise<string> => {
+    if (inTauri) return invoke("export_data", { ...req });
+    throw PREVIEW_ONLY;
+  },
+  testNotification: async (): Promise<void> => {
+    if (inTauri) return invoke("send_test_notification");
+    throw PREVIEW_ONLY;
+  },
+  /** System "save as" dialog (app only). */
+  pickSavePath: async (defaultName: string, ext: "csv" | "json"): Promise<string | null> => {
+    if (!inTauri) return null;
+    const { save } = await import("@tauri-apps/plugin-dialog");
+    return save({ defaultPath: defaultName, filters: [{ name: ext.toUpperCase(), extensions: [ext] }] });
+  },
 };
