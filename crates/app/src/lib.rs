@@ -42,7 +42,9 @@ fn open_main_window(app: &AppHandle) {
 }
 
 fn data_dir() -> PathBuf {
-    let base = std::env::var_os("APPDATA").or_else(|| std::env::var_os("HOME")).map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
+    // An empty variable would turn the data folder into a relative path in the current directory.
+    let non_empty = |name: &str| std::env::var_os(name).filter(|v| !v.is_empty());
+    let base = non_empty("APPDATA").or_else(|| non_empty("HOME")).map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
     base.join("PowerCost")
 }
 
@@ -129,6 +131,12 @@ pub fn run() {
             commands::reprice_history,
             commands::export_data,
             commands::send_test_notification,
+            commands::stopwatch_start,
+            commands::stopwatch_status,
+            commands::stopwatch_stop,
+            commands::stopwatch_cancel,
+            commands::stopwatch_history,
+            commands::stopwatch_delete,
         ])
         .setup(move |app| {
             let menu = MenuBuilder::new(app).text("open", "Open dashboard").separator().text("quit", "Quit PowerCost").build()?;

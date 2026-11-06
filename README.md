@@ -12,6 +12,7 @@ PowerCost is a small Windows program that sits in the system tray and **estimate
 * Estimates power in layers and tells you which one was used: measured CPU/GPU sensors, your own wall-meter calibration, or a default model from your hardware.
 * Prices every minute with the tariff in force at that local time: weekdays, weekends, holidays, seasons, VAT, network fees and clock changes are all handled from tariff *data*, never hard-coded.
 * Dashboard (today, week, month, year): cost and kWh, breakdown by state and by tariff period, a timeline, and "what if" scenarios (shut down at night; move heavy use to the cheap period).
+* **Stopwatch (Хронометър):** press Start, use the PC, press Stop, and see the energy, cost, average watts and power-state breakdown of exactly that time. It keeps running if you close the window or restart the app.
 * Tray tooltip with today's cost and the current watts; monthly budget alerts as Windows notifications.
 * Full tariff editor, first-run wizard, calibration wizard, CSV/JSON export, optional start with Windows, light/dark theme.
 
@@ -30,6 +31,7 @@ Download `PowerCost_<version>_x64-setup.exe` from the build output (see [Build](
 |---|---|
 | Tray icon | click to open the dashboard; right-click for *Open* and *Quit* |
 | Dashboard | period tabs, timeline (Cost/kWh, Chart/Table), breakdowns, what-if |
+| Stopwatch | start/stop a measurement of any activity (a game, a render, a night) and read its energy and cost; earlier measurements are kept |
 | Tariffs | view a preset, **Copy to edit**, correct prices and hours, save a new version when prices change (in Bulgaria usually 1 July) |
 | Settings | estimation, activity thresholds, budget, start with Windows, export |
 | Calibration | measure idle and full-load watts with a plug-in wattmeter (10 minutes) for much better accuracy |

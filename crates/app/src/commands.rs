@@ -2,6 +2,7 @@
 //! Arguments arrive camelCase from JavaScript (`recomputeFrom`) and snake_case here.
 
 use crate::state::{AppState, Live};
+use backend::stopwatch::{self, Measurement, Running, Session, Tail};
 use backend::{ReestimateSummary, SaveTariffResult, ValidationReport};
 use chrono::{DateTime, Duration, NaiveDate, TimeZone, Utc};
 use cost_engine::TariffSet;
@@ -243,4 +244,72 @@ pub fn export_data(state: State<AppState>, path: String, format: ExportFormat, g
 pub fn send_test_notification(app: tauri::AppHandle) -> CmdResult<()> {
     use tauri_plugin_notification::NotificationExt;
     app.notification().builder().title("PowerCost").body("Notifications work. You will see budget alerts like this.").show().map_err(|e| e.to_string())
+}
+
+
+// ---------------------------------------------------------------- stopwatch
+
+/// The tracker's current reading, used for the last minute that is not stored yet.
+fn stopwatch_tail(state: &AppState) -> Option<Tail> {
+    use std::str::FromStr;
+    let shared = lock(&state.shared);
+    let c = shared.current.as_ref()?;
+    Some(Tail { watts: rust_decimal::Decimal::from_str(&c.watts).ok()?, state: c.state, billable: c.on_ac != Some(false) })
+}
+
+fn stopwatch_context(state: &AppState) -> CmdResult<(TariffSet, tariff_engine::Tariff)> {
+    let l = lock(&state.live);
+    let set = TariffSet::new(l.versions.clone()).map_err(|e| e.to_string())?;
+    Ok((set, l.tariff.clone()))
+}
+
+#[derive(Serialize)]
+pub struct StopwatchStatus {
+    running: Option<Running>,
+    /// Usage so far; present while the stopwatch runs.
+    live: Option<Measurement>,
+    now: DateTime<Utc>,
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_start(state: State<AppState>, label: String) -> CmdResult<Running> {
+    let store = open(&state)?;
+    stopwatch::start(&store, &label, Utc::now()).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_status(state: State<AppState>) -> CmdResult<StopwatchStatus> {
+    let store = open(&state)?;
+    let now = Utc::now();
+    let running = stopwatch::running(&store).map_err(|e| e.to_string())?;
+    let live = match &running {
+        Some(r) => {
+            let (set, tariff) = stopwatch_context(&state)?;
+            Some(stopwatch::measure(&store, &set, &tariff, r.start, now, stopwatch_tail(&state)).map_err(|e| e.to_string())?)
+        }
+        None => None,
+    };
+    Ok(StopwatchStatus { running, live, now })
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_stop(state: State<AppState>) -> CmdResult<Session> {
+    let store = open(&state)?;
+    let (set, tariff) = stopwatch_context(&state)?;
+    stopwatch::stop(&store, &set, &tariff, stopwatch_tail(&state), Utc::now()).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_cancel(state: State<AppState>) -> CmdResult<()> {
+    stopwatch::cancel(&open(&state)?).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_history(state: State<AppState>) -> CmdResult<Vec<Session>> {
+    stopwatch::history(&open(&state)?).map_err(|e| e.to_string())
+}
+
+#[tauri::command(async)]
+pub fn stopwatch_delete(state: State<AppState>, id: String) -> CmdResult<()> {
+    stopwatch::delete(&open(&state)?, &id).map_err(|e| e.to_string())
 }

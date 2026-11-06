@@ -113,3 +113,8 @@ A tariff may carry `typical_update` ("MM-DD"; Bulgaria 07-01). After that date p
 
 ## D38 - What "memory" means
 Reported as three numbers because they differ a lot: private working set (what Task Manager shows by default; about 25 MB for the tray-only tracker), private bytes (about 26 MB), and total working set (about 44 MB fresh, up to about 64 MB after the window has been opened and closed, because shared library pages stay resident until Windows trims them). The 50 MB goal is met by the first two; the third only when freshly started.
+## D39 - Stopwatch
+A measurement of an arbitrary interval. Exact to the second: stored spans are clipped to the interval and priced with the tariff versions that applied (not read from whole-minute rows). The minute still in progress is not stored yet, so the tail after the last stored span uses the tracker's current reading; the result states how many seconds were estimated that way and how many had no data at all (never invented). Battery time keeps its kWh and costs nothing, like everywhere else. The running state and the last 50 results live in the database settings, so a measurement survives closing the window and restarting the app. Small amounts are shown in Wh and with sub-cent precision, because a few minutes of use is a fraction of a cent.
+
+## D40 - Data folder lookup ignores empty variables
+An empty `APPDATA` made the data folder a relative path in the current directory. Empty values are now treated as unset. Found when a test launch ran with a cleared variable.

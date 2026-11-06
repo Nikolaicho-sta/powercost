@@ -2,6 +2,8 @@
 //! active, saving a tariff and repricing history, calibration with re-estimation, budget alerts,
 //! compaction schedule, and the tariff editor's live validation.
 
+pub mod stopwatch;
+
 use chrono::{DateTime, Duration, NaiveDate, NaiveTime, TimeZone, Utc};
 use chrono_tz::Tz;
 use cost_engine::{nano_to_minor, TariffSet};

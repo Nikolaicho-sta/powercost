@@ -84,3 +84,27 @@ export function bucketTitle(localStart: string, bucket: "hour" | "day" | "month"
   if (bucket === "month") return `${MONTHS[m - 1]} ${y}`;
   return `${d} ${MONTHS[m - 1]} ${y}`;
 }
+
+/** 3725 -> "01:02:05" (a stopwatch face). */
+export function clock(totalSeconds: number): string {
+  const s = Math.max(0, Math.floor(totalSeconds));
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${p(Math.floor(s / 3600))}:${p(Math.floor((s % 3600) / 60))}:${p(s % 60)}`;
+}
+
+/** "1 h 02 min", "4 min 10 s", "35 s": a readable duration for results. */
+export function duration(totalSeconds: number): string {
+  const s = Math.max(0, Math.round(totalSeconds));
+  if (s < 60) return `${s} s`;
+  if (s < 3600) return `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} s`;
+  return `${Math.floor(s / 3600)} h ${String(Math.floor((s % 3600) / 60)).padStart(2, "0")} min`;
+}
+
+/** Short measurements are tiny: below 0.1 kWh show watt-hours ("8.5 Wh"), otherwise kWh. */
+export function energy(nano: number): string {
+  const v = nano / NANO;
+  if (v >= 0.1) return kwh(nano);
+  const wh = v * 1000;
+  const digits = wh >= 10 ? 1 : 2;
+  return `${wh.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })} Wh`;
+}

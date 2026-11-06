@@ -138,6 +138,29 @@ export interface ValidationReport {
 export interface SaveTariffResult { info: PresetInfo; recomputed_spans: number | null; clipped_by_compaction: boolean }
 export interface RegionInfo { candidates: { country: string; source: "timezone" | "locale" }[]; suggestions: PresetInfo[] }
 export interface Reestimate { spans: number; clipped_by_compaction: boolean }
+export interface StateLine { state: PowerStateName; seconds: number; kwh_nano: number; cost_nano: number }
+export interface PeriodLine { id: string; label: string; seconds: number; kwh_nano: number; cost_nano: number }
+export interface Measurement {
+  start: string;
+  end: string;
+  seconds: number;
+  kwh_nano: number;
+  cost_nano: number;
+  cost_minor: number;
+  currency: string;
+  minor_digits: number;
+  avg_watts: string;
+  by_state: StateLine[];
+  by_period: PeriodLine[];
+  estimated_tail_seconds: number;
+  untracked_seconds: number;
+  measured_sensors_permille: number;
+  calibrated_permille: number;
+  default_model_permille: number;
+  tariff_name: string;
+}
+export interface StopwatchSession { id: string; label: string; result: Measurement }
+export interface StopwatchStatus { running: { start: string; label: string } | null; live: Measurement | null; now: string }
 export interface ExportRequest {
   path: string;
   format: "csv" | "json";
@@ -197,6 +220,68 @@ function previewLoad(): Settings {
     return previewDefaults();
   }
 }
+
+/**
+ * Browser-preview stopwatch: a fixed pretend 45 W draw at the Electrohold daytime price, kept in
+ * localStorage, so the screen can be tried without the app. Integer maths only; the real numbers
+ * come from the Rust backend.
+ */
+const SW_RUN = "pc-preview-sw-run";
+const SW_HIST = "pc-preview-sw-hist";
+const previewJson = <T,>(key: string, fallback: T): T => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+};
+const previewSet = (key: string, value: unknown) => {
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    /* preview only */
+  }
+};
+function previewMeasure(startIso: string, end: Date): Measurement {
+  const seconds = Math.max(0, Math.round((end.getTime() - new Date(startIso).getTime()) / 1000));
+  const kwh_nano = Math.round((45 * seconds * 10000) / 36); // 45 W * s / 3.6e6 kWh, in nano
+  const cost_nano = Math.round((kwh_nano * 154248) / 1_000_000);
+  return {
+    start: startIso, end: end.toISOString(), seconds, kwh_nano, cost_nano, cost_minor: Math.round(cost_nano / 1e7), currency: "EUR", minor_digits: 2,
+    avg_watts: seconds > 0 ? "45.0" : "0.0",
+    by_state: seconds > 0 ? [{ state: "active", seconds, kwh_nano, cost_nano }] : [],
+    by_period: seconds > 0 ? [{ id: "day", label: "Day", seconds, kwh_nano, cost_nano }] : [],
+    estimated_tail_seconds: 0, untracked_seconds: 0, measured_sensors_permille: 0, calibrated_permille: 0, default_model_permille: seconds > 0 ? 1000 : 0,
+    tariff_name: "Preview tariff",
+  };
+}
+const previewStopwatch = {
+  start(label: string) {
+    previewSet(SW_RUN, { start: new Date().toISOString(), label: label.trim() });
+  },
+  status(): StopwatchStatus {
+    const running = previewJson<{ start: string; label: string } | null>(SW_RUN, null);
+    const now = new Date();
+    return { running, live: running ? previewMeasure(running.start, now) : null, now: now.toISOString() };
+  },
+  stop(): StopwatchSession {
+    const running = previewJson<{ start: string; label: string } | null>(SW_RUN, null);
+    if (!running) throw ["the stopwatch is not running"];
+    const session = { id: String(new Date(running.start).getTime()), label: running.label, result: previewMeasure(running.start, new Date()) };
+    previewSet(SW_HIST, [session, ...previewJson<StopwatchSession[]>(SW_HIST, [])].slice(0, 50));
+    previewSet(SW_RUN, null);
+    return session;
+  },
+  cancel() {
+    previewSet(SW_RUN, null);
+  },
+  history: (): StopwatchSession[] => previewJson<StopwatchSession[]>(SW_HIST, []),
+  remove(id: string) {
+    previewSet(SW_HIST, previewJson<StopwatchSession[]>(SW_HIST, []).filter((s) => s.id !== id));
+  },
+};
 
 const PREVIEW_ONLY = ["This is the browser preview: saving, validation and exports run inside the PowerCost app."];
 
@@ -269,6 +354,24 @@ export const api = {
   testNotification: async (): Promise<void> => {
     if (inTauri) return invoke("send_test_notification");
     throw PREVIEW_ONLY;
+  },
+  stopwatchStart: async (label: string): Promise<void> => {
+    if (inTauri) {
+      await invoke("stopwatch_start", { label });
+      return;
+    }
+    previewStopwatch.start(label);
+  },
+  stopwatchStatus: async (): Promise<StopwatchStatus> => (inTauri ? invoke("stopwatch_status") : previewStopwatch.status()),
+  stopwatchStop: async (): Promise<StopwatchSession> => (inTauri ? invoke("stopwatch_stop") : previewStopwatch.stop()),
+  stopwatchCancel: async (): Promise<void> => {
+    if (inTauri) return invoke("stopwatch_cancel");
+    previewStopwatch.cancel();
+  },
+  stopwatchHistory: async (): Promise<StopwatchSession[]> => (inTauri ? invoke("stopwatch_history") : previewStopwatch.history()),
+  stopwatchDelete: async (id: string): Promise<void> => {
+    if (inTauri) return invoke("stopwatch_delete", { id });
+    previewStopwatch.remove(id);
   },
   /** System "save as" dialog (app only). */
   pickSavePath: async (defaultName: string, ext: "csv" | "json"): Promise<string | null> => {

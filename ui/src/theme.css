@@ -248,3 +248,10 @@ code { background: var(--wash); border-radius: 4px; padding: 0 4px; font-size: 1
 .meter .fill.over { background: #d03b3b; }
 :root[data-theme="dark"] .meter { background: #0d366b; }
 @media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) .meter { background: #0d366b; } }
+
+/* ---------- stopwatch ---------- */
+.sw-face { font-size: 64px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; margin: 4px 0 8px; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 8px 0; }
+@media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } .sw-face { font-size: 44px; } }
+.tile { border: 1px solid var(--grid); border-radius: 12px; padding: 12px; }
+.tile .v { font-size: 28px; font-weight: 650; letter-spacing: -0.01em; margin: 2px 0; }

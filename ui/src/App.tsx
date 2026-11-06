@@ -8,11 +8,12 @@ import { Hero } from "./components/Hero";
 import { InfoTip } from "./components/InfoTip";
 import { Segmented } from "./components/Segmented";
 import { SettingsPage } from "./components/SettingsPage";
+import { StopwatchPage } from "./components/Stopwatch";
 import { TariffEditor } from "./components/TariffEditor";
 import { Timeline } from "./components/Timeline";
 import { WhatIfPanel } from "./components/WhatIf";
 
-type View = "dashboard" | "tariffs" | "settings";
+type View = "dashboard" | "stopwatch" | "tariffs" | "settings";
 
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
@@ -69,9 +70,9 @@ export function App() {
       <header className="top">
         <h1>⚡ PowerCost</h1>
         <nav className="tabs" aria-label="Sections">
-          {(["dashboard", "tariffs", "settings"] as View[]).map((v) => (
+          {(["dashboard", "stopwatch", "tariffs", "settings"] as View[]).map((v) => (
             <button key={v} type="button" aria-current={view === v ? "page" : undefined} className={view === v ? "on" : ""} onClick={() => setView(v)}>
-              {v === "dashboard" ? "Dashboard" : v === "tariffs" ? "Tariffs" : "Settings"}
+              {v === "dashboard" ? "Dashboard" : v === "stopwatch" ? "Stopwatch" : v === "tariffs" ? "Tariffs" : "Settings"}
             </button>
           ))}
         </nav>
@@ -145,6 +146,7 @@ export function App() {
           !error && <p className="muted">Loading...</p>
         ))}
 
+      {view === "stopwatch" && <StopwatchPage />}
       {view === "tariffs" && <TariffEditor onChanged={() => api.info().then(setInfo)} />}
       {view === "settings" && <SettingsPage info={info} onSaved={onSaved} onCalibrate={() => setCalibrating(true)} onOpenTariffs={() => setView("tariffs")} />}
 
