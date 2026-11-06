@@ -1,6 +1,6 @@
 ﻿[workspace]
 resolver = "2"
-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine"]
+members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe"]
 
 [workspace.package]
 edition = "2021"

@@ -1,0 +1,9 @@
+[package]
+name = "state-detection"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+pc-core = { version = "0.1.0", path = "../pc-core" }
+serde = { version = "1.0.229", features = ["derive"] }
