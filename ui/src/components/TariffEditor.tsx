@@ -217,6 +217,7 @@ export function TariffEditor({ onChanged }: { onChanged: () => void }) {
               <Field label="Valid to (optional)"><input type="date" value={doc.valid_to ?? ""} disabled={readOnly} onChange={(e) => upd((d) => (d.valid_to = e.target.value || null))} /></Field>
               <Field label="Source link"><input value={doc.source_url ?? ""} disabled={readOnly} placeholder="https://..." onChange={(e) => upd((d) => (d.source_url = e.target.value || null))} /></Field>
               <Field label="Last checked against the source"><input type="date" value={doc.last_verified ?? ""} disabled={readOnly} onChange={(e) => upd((d) => (d.last_verified = e.target.value || null))} /></Field>
+              <Field label="Prices usually change on (MM-DD)" help="For example 07-01 in Bulgaria. After that date PowerCost reminds you to check the prices if you have not re-checked them since."><input value={doc.typical_update ?? ""} placeholder="07-01" disabled={readOnly} style={{ width: 90 }} onChange={(e) => upd((d) => (d.typical_update = e.target.value.trim() || null))} /></Field>
               <Field label="Verification"><select value={doc.verification ?? "unverified"} disabled={readOnly} onChange={(e) => upd((d) => (d.verification = e.target.value as Verification))}>{["verified", "partial", "unverified", "example"].map((v) => <option key={v}>{v}</option>)}</select></Field>
             </div>
             <Field label="Notes"><textarea rows={2} value={doc.notes ?? ""} disabled={readOnly} onChange={(e) => upd((d) => (d.notes = e.target.value))} /></Field>

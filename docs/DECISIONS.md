@@ -96,3 +96,20 @@ The tracker thread compacts detail older than the retention setting (default 90 
 
 ## D32 - Fixed monthly fees
 Off by default. When included, each local day carries 1/(days in that month) of the VAT-inclusive monthly amount, shown as its own line and in the grand total; energy figures are unchanged.
+## D33 - Installer: per-user NSIS
+`tauri build` (run from `crates/app`) produces `PowerCost_<version>_x64-setup.exe` (about 3.4 MB): per-user install (no admin), English and Bulgarian, WebView2 bootstrapper for Windows 10 machines without it. An installer hook deletes the per-user "Start with Windows" Run value on uninstall; user data in `%APPDATA%\PowerCost` is deliberately left behind (the README says how to remove it). The first build downloads NSIS 3.13 and the Tauri NSIS utils DLL into `%LOCALAPPDATA%\tauri`. Tested by a silent install into a temp folder, a launch, an uninstall, and a check that the program, uninstall entry, shortcut and startup value are gone.
+
+## D34 - Smart-plug sources: interface only
+`sources-api` defines `WallPowerSource` (id, kind, read, max age), plausibility checks and a registry that returns the first healthy fresh reading and reports the problems of sources tried before it. Nothing implements it and the estimator does not consume it yet; the planned integration is a new top layer ("wall measurement") above sensors, with its own confidence label. This closes a gap from the original spec that M3 skipped. Implementations must stay opt-in and local-network and be documented in docs/PRIVACY.md first.
+
+## D35 - Single instance
+A second launch (login autostart plus a manual start, or a double click) focuses the running instance instead of starting a second tracker on the same database. Not active in `--sim` mode so a demo can run beside the real app. Verified: one process, and the first instance's window opens.
+
+## D36 - Release profile
+`opt-level = "s"`, thin LTO, one codegen unit, stripped: the program shrank from 18 MB to 13.7 MB. Memory did not change measurably, because it is dominated by the runtime, not by code size. `panic = "abort"` was not used so a panic in the tracker thread does not take the whole app down.
+
+## D37 - "Prices usually change on ..." reminder
+A tariff may carry `typical_update` ("MM-DD"; Bulgaria 07-01). After that date passes, a version that started before it and was not re-verified since gets an "update likely due" warning (dashboard banner, tariff editor). Re-verifying after the date, or adding a version that starts after it, clears the reminder; it returns the next year. This is the "warn when the tariff is old" requirement made specific.
+
+## D38 - What "memory" means
+Reported as three numbers because they differ a lot: private working set (what Task Manager shows by default; about 25 MB for the tray-only tracker), private bytes (about 26 MB), and total working set (about 44 MB fresh, up to about 64 MB after the window has been opened and closed, because shared library pages stay resident until Windows trims them). The 50 MB goal is met by the first two; the third only when freshly started.

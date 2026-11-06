@@ -19,6 +19,11 @@
     "valid_to": { "anyOf": [{ "$ref": "#/definitions/date" }, { "type": "null" }] },
     "source_url": { "type": ["string", "null"] },
     "last_verified": { "anyOf": [{ "$ref": "#/definitions/date" }, { "type": "null" }] },
+    "typical_update": {
+      "type": ["string", "null"],
+      "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$",
+      "description": "MM-DD on which prices usually change each year (Bulgaria: 07-01). Drives the update reminder."
+    },
     "verification": {
       "type": "string",
       "enum": ["verified", "partial", "unverified", "example"],

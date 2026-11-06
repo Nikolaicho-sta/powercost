@@ -215,6 +215,10 @@ fn warning_dto(w: &Warning) -> WarningDto {
         Warning::VerifiedLongAgo { days } => {
             ("verified_long_ago", format!("Prices were last verified {days} days ago; they may be out of date."))
         }
+        Warning::UpdateLikelyDue { since } => (
+            "update_due",
+            format!("Prices for this region usually change around {since}. Check whether new prices apply and add a new tariff version if they do."),
+        ),
         Warning::MarkedUnverified => ("unverified", "This preset is marked unverified - check the prices before trusting the costs.".to_string()),
     };
     WarningDto { code: code.into(), message }

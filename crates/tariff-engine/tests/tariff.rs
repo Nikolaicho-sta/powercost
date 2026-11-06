@@ -350,3 +350,63 @@ fn warns_when_expired_unverified_or_not_yet_valid() {
     assert!(w.contains(&Warning::NeverVerified));
     assert!(w.contains(&Warning::MarkedUnverified));
 }
+
+// ---------- "prices usually change on ..." reminder ----------
+
+fn with_update(valid_from: &str, last_verified: Option<&str>, typical: &str) -> Tariff {
+    let mut v = two_zone();
+    v["valid_from"] = json!(valid_from);
+    v["valid_to"] = Value::Null;
+    v["last_verified"] = last_verified.map_or(Value::Null, |s| json!(s));
+    v["typical_update"] = json!(typical);
+    load(v)
+}
+
+fn due(t: &Tariff, y: i32, m: u32, d: u32) -> Option<NaiveDate> {
+    t.warnings(NaiveDate::from_ymd_opt(y, m, d).unwrap()).into_iter().find_map(|w| match w {
+        Warning::UpdateLikelyDue { since } => Some(since),
+        _ => None,
+    })
+}
+
+#[test]
+fn update_reminder_fires_after_the_usual_change_date_and_not_before() {
+    let t = with_update("2026-07-01", Some("2026-11-01"), "07-01");
+    assert_eq!(due(&t, 2026, 11, 6), None, "this version started on the change date itself");
+    assert_eq!(due(&t, 2027, 6, 30), None);
+    assert_eq!(due(&t, 2027, 7, 1), NaiveDate::from_ymd_opt(2027, 7, 1));
+    assert_eq!(due(&t, 2027, 12, 31), NaiveDate::from_ymd_opt(2027, 7, 1));
+}
+
+#[test]
+fn re_verifying_after_the_change_date_clears_the_reminder() {
+    let t = with_update("2026-07-01", Some("2027-07-05"), "07-01");
+    assert_eq!(due(&t, 2027, 7, 10), None);
+    // ...but it comes back the following year
+    assert_eq!(due(&t, 2028, 7, 2), NaiveDate::from_ymd_opt(2028, 7, 1));
+}
+
+#[test]
+fn a_never_verified_older_tariff_is_reminded_too() {
+    let t = with_update("2025-07-01", None, "07-01");
+    assert_eq!(due(&t, 2026, 7, 2), NaiveDate::from_ymd_opt(2026, 7, 1));
+}
+
+#[test]
+fn the_reminder_uses_the_previous_years_date_early_in_the_year() {
+    let t = with_update("2026-07-01", Some("2026-11-01"), "01-15");
+    assert_eq!(due(&t, 2027, 1, 10), None, "Jan 15 2026 is before this version started");
+    assert_eq!(due(&t, 2027, 1, 16), NaiveDate::from_ymd_opt(2027, 1, 15));
+}
+
+#[test]
+fn tariffs_without_the_field_never_remind_and_bad_dates_are_rejected() {
+    let plain = load(two_zone());
+    assert_eq!(due(&plain, 2030, 8, 1), None);
+    let mut v = two_zone();
+    v["typical_update"] = json!("02-30");
+    assert!(matches!(Tariff::from_value(v), Err(TariffError::Invalid(m)) if m.contains("month-day")));
+    let mut v = two_zone();
+    v["typical_update"] = json!("13-01");
+    assert!(matches!(Tariff::from_value(v), Err(TariffError::Schema(_))));
+}

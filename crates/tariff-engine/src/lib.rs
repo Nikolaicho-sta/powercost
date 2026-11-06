@@ -61,6 +61,9 @@ pub enum Warning {
     NeverVerified,
     VerifiedLongAgo { days: i64 },
     MarkedUnverified,
+    /// Prices usually change on `typical_update`; that date has passed since this version started
+    /// and the prices were not re-checked after it.
+    UpdateLikelyDue { since: NaiveDate },
 }
 
 impl Tariff {
@@ -162,7 +165,23 @@ impl Tariff {
         if matches!(self.verification, Some(Verification::Unverified)) {
             w.push(Warning::MarkedUnverified);
         }
+        if let Some(since) = self.last_typical_update(today) {
+            if self.valid_from < since && self.last_verified.is_none_or(|v| v < since) {
+                w.push(Warning::UpdateLikelyDue { since });
+            }
+        }
         w
+    }
+
+    /// The most recent occurrence of `typical_update` on or before `today`.
+    pub fn last_typical_update(&self, today: NaiveDate) -> Option<NaiveDate> {
+        let (m, d) = parse_md(self.typical_update.as_deref()?);
+        let this_year = NaiveDate::from_ymd_opt(today.year(), m as u32, d as u32)?;
+        if this_year <= today {
+            Some(this_year)
+        } else {
+            NaiveDate::from_ymd_opt(today.year() - 1, m as u32, d as u32)
+        }
     }
 }
 
@@ -200,6 +219,12 @@ fn compile(t: &Tariff) -> Result<Compiled, TariffError> {
     if let Some(to) = t.valid_to {
         if to < t.valid_from {
             return invalid("valid_to is before valid_from");
+        }
+    }
+    if let Some(tu) = &t.typical_update {
+        let (m, d) = parse_md(tu);
+        if NaiveDate::from_ymd_opt(2024, m as u32, d as u32).is_none() {
+            return invalid(format!("typical_update '{tu}' is not a real month-day"));
         }
     }
 

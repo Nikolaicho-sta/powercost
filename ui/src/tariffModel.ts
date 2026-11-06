@@ -33,6 +33,8 @@ export interface TariffDoc {
   valid_to?: string | null;
   source_url?: string | null;
   last_verified?: string | null;
+  /** "MM-DD": the date prices usually change each year (Bulgaria: "07-01"). */
+  typical_update?: string | null;
   verification?: Verification;
   notes?: string;
   components: Component[];

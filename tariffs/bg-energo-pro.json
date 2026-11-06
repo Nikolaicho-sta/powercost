@@ -12,6 +12,7 @@
   "valid_to": null,
   "source_url": "https://www.energo-pro.bg/en/novini/kevr-utvrdi-novi-ceni-na-elektroenergiyata-ot-1-yuli-2026-g",
   "last_verified": "2026-11-06",
+  "typical_update": "07-01",
   "verification": "partial",
   "notes": "Prices 0.12927 day / 0.07733 night EUR/kWh excl. VAT are stated on Energo-Pro's own news page (decision Ts-13, 01.07.2026) and a news site. The page does not say whether network services are included; by analogy with Electrohold's official page they probably are, but this is NOT confirmed. Hours are copied from Electrohold's page (not confirmed on an Energo-Pro page). Decision PDF not read.",
   "components": [

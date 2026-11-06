@@ -1,0 +1,10 @@
+[package]
+name = "sources-api"
+description = "Plugin interface for external wall-power sources (smart plugs). Interface only."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+chrono = "0.4"
+thiserror = "2"

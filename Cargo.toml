@@ -1,16 +1,16 @@
 [workspace]
 resolver = "2"
-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend", "crates/app"]
-default-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend"]
+members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend", "crates/sources-api", "crates/app"]
+default-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine", "crates/gap-classifier", "crates/state-detection", "crates/sensors", "crates/probe", "crates/estimator", "crates/storage", "crates/simulator", "crates/dashboard", "crates/tracker", "crates/devtools", "crates/settings", "crates/backend", "crates/sources-api"]
 
 [workspace.package]
 edition = "2021"
 version = "0.1.0"
 license = "MIT"
 
-
-
-
-
-
-
+# Small, quiet binary for a program that sits in the tray all day.
+[profile.release]
+opt-level = "s"
+lto = "thin"
+codegen-units = 1
+strip = true

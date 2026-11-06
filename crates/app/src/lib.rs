@@ -101,7 +101,14 @@ pub fn run() {
         tracker: Mutex::new(None),
     };
 
-    let app = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    if !simulated {
+        // Must be the first plugin. A second launch (login autostart plus a manual start, or a
+        // double-click on the shortcut) opens the existing instance's window instead of starting
+        // a second tracker on the same database.
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_main_window(app)));
+    }
+    let app = builder
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         .manage(state)

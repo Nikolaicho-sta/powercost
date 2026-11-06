@@ -142,6 +142,9 @@ pub struct Tariff {
     pub source_url: Option<String>,
     #[serde(default)]
     pub last_verified: Option<NaiveDate>,
+    /// "MM-DD" on which prices usually change every year (for example "07-01").
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub typical_update: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub verification: Option<Verification>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
