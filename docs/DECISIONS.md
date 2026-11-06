@@ -52,3 +52,21 @@ The spec orders the chain sensors -> calibrated -> default. CPU+GPU sensors meas
 
 ## D17 - Only mains energy is billed
 Spans carry `billable`; battery periods keep their kWh but cost 0. Sleep gaps use the on/off-AC flag from the 507 event; other gap kinds use the last heartbeat's power source.
+
+## D18 - The dashboard read model lives in Rust; the UI only displays
+`dashboard` computes period ranges (Monday-start weeks, local-midnight days, DST-safe), breakdowns, bucketed timelines (hour/day/month, padded with empty future buckets), the confidence mix and what-if. Amounts travel as integers (`kwh_nano`, `cost_nano`) plus a Rust-rounded `cost_minor`; the UI divides by 1e9 only to format. No money is summed or rounded in TypeScript.
+
+## D19 - Closing the window destroys it; the tracker lives in the tray
+To keep the resident footprint to the tracker, closing the dashboard destroys the WebView window (not hide) and `RunEvent::ExitRequested` without an exit code is prevented. Tray left-click or "Open dashboard" recreates it; "Quit" exits, joins the tracker thread (flushes the open minute, final heartbeat). `--tray` starts without a window; `--sim` runs on a generated database with no live tracker.
+
+## D20 - Tracker semantics
+Sampling every 10 s, one span per minute (averaged inputs, majority state), spans always tile (the first span after startup/gap starts where the previous coverage ended). Heartbeat every 30 s. Power events are copied to the database every 30 min and at startup. A gap seen *inside* the running process (clock jump > max(3 x interval, 90 s)) is classified from events; with no events it is a stall and is priced as Idle, not Off. A gap left from a previous run with no events uses the configurable Off assumption.
+
+## D21 - What-if method
+Computed from stored minute rows with the prices that actually applied. "Shut down at night": Idle/Sleep minutes inside the local night window are re-priced at the configured off watts. "Shift": a chosen share of ACTIVE energy outside the cheapest period of the current tariff is re-priced at that period's price (same kWh). Only billable, non-compacted history is used; a note says when part of the range is compacted. Yearly figures are a linear extrapolation of the window.
+
+## D22 - Chart colours
+States use categorical slots 1-5 in fixed order (Active blue, Idle orange, Sleep aqua, Hibernate yellow, Off magenta); tariff periods use slots 6-8 so a period never looks like a state; the estimate-confidence bar is an ordinal one-hue blue ramp. All sets were run through the palette validator in light and dark (adjacent CVD dE >= 8.4, normal-vision >= 19). Three light-mode slots are below 3:1 contrast, so every chart has a visible legend, a hover tooltip and a table view.
+
+## D23 - Build layout
+The Tauri crate is a workspace member but not a default member: plain `cargo test` / `cargo build` skip it and need no frontend bundle. Building the app needs `npm run build` in `ui/` first (the bundle is embedded). `export-mock` writes real dashboard JSON from simulated data so the UI can be previewed in a plain browser.

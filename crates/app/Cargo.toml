@@ -1,0 +1,35 @@
+[package]
+name = "powercost"
+description = "PowerCost - estimate what your PC costs in electricity"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[lib]
+name = "powercost_lib"
+crate-type = ["rlib"]
+
+[[bin]]
+name = "powercost"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+chrono = "0.4"
+chrono-tz = "0.10"
+rust_decimal = "1"
+pc-core = { path = "../pc-core" }
+tariff-engine = { path = "../tariff-engine" }
+cost-engine = { path = "../cost-engine" }
+estimator = { path = "../estimator" }
+storage = { path = "../storage" }
+sensors = { path = "../sensors" }
+gap-classifier = { path = "../gap-classifier" }
+dashboard = { path = "../dashboard" }
+tracker = { path = "../tracker" }
+simulator = { path = "../simulator" }

@@ -9,10 +9,13 @@
 
 mod compaction;
 mod ingest;
+mod queries;
+mod queries_layers;
 mod schema;
 
 pub use compaction::CompactionReport;
 pub use ingest::IngestResult;
+pub use queries::{Bucket, BucketRow, CostRow};
 
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use chrono_tz::Tz;
@@ -504,3 +507,5 @@ pub(crate) fn price_into(conn: &Connection, sample: &UsageSample, tariffs: &Tari
     }
     Ok(())
 }
+
+
