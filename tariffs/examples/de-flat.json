@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "example-de-flat",
+  "name": "EXAMPLE - Germany flat tariff (structure only, made-up price)",
+  "country": "DE",
+  "currency": "EUR",
+  "timezone": "Europe/Berlin",
+  "vat_percent": "19",
+  "valid_from": "2026-01-01",
+  "valid_to": null,
+  "source_url": null,
+  "last_verified": null,
+  "verification": "example",
+  "notes": "Structure example only. The price is invented; enter your own from your bill.",
+  "components": [
+    { "id": "all_in", "kind": "energy", "label": "All-in price per kWh incl. VAT", "vat_inclusive": true, "per_kwh": "0.30" }
+  ],
+  "fixed_fees": [{ "id": "base_fee", "label": "Base fee per month", "per_month": "12.00", "vat_inclusive": true }],
+  "periods": [{ "id": "flat", "label": "Flat" }],
+  "schedule": {
+    "seasons": [
+      { "id": "all", "from": "01-01", "to": "12-31",
+        "rules": [{ "days": ["all"], "ranges": [{ "start": "00:00", "end": "24:00" }], "period": "flat" }] }
+    ]
+  }
+}

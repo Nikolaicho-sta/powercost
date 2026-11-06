@@ -1,0 +1,135 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://powercost.local/schema/tariff-v1.json",
+  "title": "PowerCost tariff v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "id", "name", "country", "currency", "timezone", "vat_percent", "valid_from", "components", "periods", "schedule"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]*$" },
+    "version": { "type": "integer", "minimum": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "country": { "type": "string", "pattern": "^[A-Z]{2}$" },
+    "distributor": { "type": ["string", "null"] },
+    "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+    "timezone": { "type": "string", "minLength": 1 },
+    "vat_percent": { "$ref": "#/definitions/decimal" },
+    "valid_from": { "$ref": "#/definitions/date" },
+    "valid_to": { "anyOf": [{ "$ref": "#/definitions/date" }, { "type": "null" }] },
+    "source_url": { "type": ["string", "null"] },
+    "last_verified": { "anyOf": [{ "$ref": "#/definitions/date" }, { "type": "null" }] },
+    "verification": {
+      "type": "string",
+      "enum": ["verified", "partial", "unverified", "example"],
+      "description": "How well the figures are backed by official sources."
+    },
+    "notes": { "type": "string" },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "vat_inclusive"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "kind": { "enum": ["energy", "network", "excise", "levy", "other"] },
+          "label": { "type": "string" },
+          "vat_inclusive": { "type": "boolean" },
+          "per_kwh": { "$ref": "#/definitions/decimal" },
+          "per_period": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": { "$ref": "#/definitions/decimal" }
+          },
+          "source_url": { "type": ["string", "null"] }
+        },
+        "oneOf": [{ "required": ["per_kwh"] }, { "required": ["per_period"] }]
+      }
+    },
+    "fixed_fees": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "per_month", "vat_inclusive"],
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "per_month": { "$ref": "#/definitions/decimal" },
+          "vat_inclusive": { "type": "boolean" }
+        }
+      }
+    },
+    "periods": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "label": { "type": "string" }
+        }
+      }
+    },
+    "holidays": { "type": "array", "items": { "$ref": "#/definitions/date" } },
+    "schedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seasons"],
+      "properties": {
+        "seasons": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "from", "to", "rules"],
+            "properties": {
+              "id": { "type": "string" },
+              "from": { "type": "string", "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$" },
+              "to": { "type": "string", "pattern": "^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$" },
+              "rules": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["days", "ranges", "period"],
+                  "properties": {
+                    "days": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": { "enum": ["all", "weekday", "weekend", "saturday", "sunday", "holiday"] }
+                    },
+                    "ranges": {
+                      "type": "array",
+                      "minItems": 1,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["start", "end"],
+                        "properties": {
+                          "start": { "type": "string", "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$" },
+                          "end": { "type": "string", "pattern": "^(([01][0-9]|2[0-3]):[0-5][0-9]|24:00)$" }
+                        }
+                      }
+                    },
+                    "period": { "type": "string" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "decimal": { "type": "string", "pattern": "^-?[0-9]+(\\.[0-9]+)?$" },
+    "date": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+  }
+}

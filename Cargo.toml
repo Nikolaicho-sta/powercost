@@ -1,0 +1,13 @@
+﻿[workspace]
+resolver = "2"
+members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine"]
+
+[workspace.package]
+edition = "2021"
+version = "0.1.0"
+license = "MIT"
+
+
+
+
+

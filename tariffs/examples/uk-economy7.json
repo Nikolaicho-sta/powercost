@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "id": "example-uk-economy7",
+  "name": "EXAMPLE - UK Economy 7 style (structure only, made-up prices)",
+  "country": "GB",
+  "currency": "GBP",
+  "timezone": "Europe/London",
+  "vat_percent": "5",
+  "valid_from": "2026-01-01",
+  "valid_to": null,
+  "source_url": null,
+  "last_verified": null,
+  "verification": "example",
+  "notes": "Structure example only. Prices and the 7-hour off-peak window are invented placeholders; real Economy 7 hours depend on the meter. Shows a weekend/holiday-independent two-rate tariff with all prices VAT-inclusive.",
+  "components": [
+    { "id": "unit_rate", "kind": "energy", "label": "Unit rate incl. VAT", "vat_inclusive": true, "per_period": { "peak": "0.30", "off_peak": "0.15" } }
+  ],
+  "fixed_fees": [{ "id": "standing", "label": "Standing charge per month", "per_month": "15.00", "vat_inclusive": true }],
+  "periods": [{ "id": "peak", "label": "Peak" }, { "id": "off_peak", "label": "Off-peak" }],
+  "schedule": {
+    "seasons": [
+      { "id": "all", "from": "01-01", "to": "12-31",
+        "rules": [
+          { "days": ["all"], "ranges": [{ "start": "00:00", "end": "07:00" }], "period": "off_peak" },
+          { "days": ["all"], "ranges": [{ "start": "07:00", "end": "24:00" }], "period": "peak" }
+        ] }
+    ]
+  }
+}

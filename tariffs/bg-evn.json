@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "bg-evn",
+  "version": 2026,
+  "name": "EVN - household, two-zone, regulated (UNVERIFIED)",
+  "country": "BG",
+  "distributor": "EVN",
+  "currency": "EUR",
+  "timezone": "Europe/Sofia",
+  "vat_percent": "20",
+  "valid_from": "2026-07-01",
+  "valid_to": null,
+  "source_url": "https://www.dker.bg/uploads/reshenia/2026/res-c-13-2026.pdf",
+  "last_verified": null,
+  "verification": "unverified",
+  "notes": "UNVERIFIED. Prices 0.12882 day / 0.07688 night EUR/kWh excl. VAT come from a single search-result summary, not from an EVN or EWRC page I could open; by analogy with Electrohold's page they are probably the 'final price incl. network services'. Hours are copied from Electrohold's page (EWRC sets one schedule for all three companies per secondary sources, not confirmed on an EVN page). Verify against EWRC decision Ts-13 of 01.07.2026 before relying on this.",
+  "components": [
+    {
+      "id": "final_price_incl_network",
+      "kind": "energy",
+      "label": "Final price incl. network services, excl. VAT",
+      "vat_inclusive": false,
+      "per_period": { "day": "0.12882", "night": "0.07688" }
+    }
+  ],
+  "fixed_fees": [],
+  "periods": [
+    { "id": "day", "label": "Day" },
+    { "id": "night", "label": "Night" }
+  ],
+  "holidays": [],
+  "schedule": {
+    "seasons": [
+      {
+        "id": "winter", "from": "11-01", "to": "03-31",
+        "rules": [
+          { "days": ["all"], "ranges": [{ "start": "00:00", "end": "06:00" }, { "start": "22:00", "end": "24:00" }], "period": "night" },
+          { "days": ["all"], "ranges": [{ "start": "06:00", "end": "22:00" }], "period": "day" }
+        ]
+      },
+      {
+        "id": "summer", "from": "04-01", "to": "10-31",
+        "rules": [
+          { "days": ["all"], "ranges": [{ "start": "00:00", "end": "07:00" }, { "start": "23:00", "end": "24:00" }], "period": "night" },
+          { "days": ["all"], "ranges": [{ "start": "07:00", "end": "23:00" }], "period": "day" }
+        ]
+      }
+    ]
+  }
+}

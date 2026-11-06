@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "bg-electrohold",
+  "version": 2026,
+  "name": "Electrohold (Electrohold Prodazhbi) - household, two-zone, regulated",
+  "country": "BG",
+  "distributor": "Electrohold",
+  "currency": "EUR",
+  "timezone": "Europe/Sofia",
+  "vat_percent": "20",
+  "valid_from": "2026-07-01",
+  "valid_to": null,
+  "source_url": "https://electrohold.bg/bg/sales/domakinstva/snabdyavane-po-regulirani-ceni/",
+  "last_verified": "2026-11-06",
+  "verification": "partial",
+  "notes": "Source: Electrohold's official page (EWRC decision Ts-13 of 01.07.2026). Verified from that page: day/night hours and date ranges, supplier energy price (excl. VAT) and the four network-service prices of 'Elektrorazpredelitelni mrezhi Zapad' (excl. VAT); day gross = (0.09297+0.00801+0.00018+0.02391+0.00347)=0.12854 excl. VAT, night 0.07660 excl. VAT, matching the page's 'final prices incl. network services' column. NOT verified: the decision PDF itself was not read; the page lists no 'obligations to society' levy, no excise and no fixed monthly fee - if any apply they are missing here; valid_to is unknown (regulated prices have been revised each 1 July; a secondary source says 30.06.2027). Customers connected to a different network operator pay that operator's network prices (see decision Ts-13). Seasons follow fixed calendar dates (01.04 / 01.11), not the DST change.",
+  "components": [
+    {
+      "id": "energy",
+      "kind": "energy",
+      "label": "Electricity (supplier), excl. VAT",
+      "vat_inclusive": false,
+      "per_period": { "day": "0.09297", "night": "0.04103" }
+    },
+    { "id": "transmission", "kind": "network", "label": "Transmission network (transit), excl. VAT", "vat_inclusive": false, "per_kwh": "0.00801" },
+    { "id": "transmission_access", "kind": "network", "label": "Access to transmission network, excl. VAT", "vat_inclusive": false, "per_kwh": "0.00018" },
+    { "id": "distribution_lv", "kind": "network", "label": "Distribution network LV (transit), excl. VAT", "vat_inclusive": false, "per_kwh": "0.02391" },
+    { "id": "distribution_access", "kind": "network", "label": "Access to distribution network, excl. VAT", "vat_inclusive": false, "per_kwh": "0.00347" }
+  ],
+  "fixed_fees": [],
+  "periods": [
+    { "id": "day", "label": "Day" },
+    { "id": "night", "label": "Night" }
+  ],
+  "holidays": [],
+  "schedule": {
+    "seasons": [
+      {
+        "id": "winter",
+        "from": "11-01",
+        "to": "03-31",
+        "rules": [
+          { "days": ["all"], "ranges": [{ "start": "00:00", "end": "06:00" }, { "start": "22:00", "end": "24:00" }], "period": "night" },
+          { "days": ["all"], "ranges": [{ "start": "06:00", "end": "22:00" }], "period": "day" }
+        ]
+      },
+      {
+        "id": "summer",
+        "from": "04-01",
+        "to": "10-31",
+        "rules": [
+          { "days": ["all"], "ranges": [{ "start": "00:00", "end": "07:00" }, { "start": "23:00", "end": "24:00" }], "period": "night" },
+          { "days": ["all"], "ranges": [{ "start": "07:00", "end": "23:00" }], "period": "day" }
+        ]
+      }
+    ]
+  }
+}
