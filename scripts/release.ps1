@@ -50,6 +50,13 @@ if (-not (Test-Path $installer)) { if ($DryRun) { Write-Host "(dry run) installe
 $name = Split-Path $installer -Leaf
 $sha = if (Test-Path $installer) { (Get-FileHash $installer -Algorithm SHA256).Hash.ToLower() } else { '<sha256>' }
 
+# The newest commit is named "M<n> ...": put that label in front of the notes so the app and the
+# releases page show which milestone the release contains (e.g. "M24: Faster start").
+$m = ''
+$subject = (& git -C $root log -1 --format=%s)
+if ($subject -match '^(M\d+)\b') { $m = $Matches[1]; if ($Notes -notmatch '^M\d+\b') { $Notes = "${m}: $Notes" } }
+$title = if ($m) { "PowerCost $version ($m)" } else { "PowerCost $version" }
+
 $body = "$Notes`r`n`r`nSHA-256 of ``$name``:`r`n``$sha```r`n`r`nThe installer is not code-signed, so Windows SmartScreen may warn: click `"More info`", then `"Run anyway`"."
 $notesFile = Join-Path ([IO.Path]::GetTempPath()) "powercost-release-notes.md"
 [IO.File]::WriteAllText($notesFile, $body, (New-Object System.Text.UTF8Encoding($false)))  # no BOM: it would show in the app
@@ -58,6 +65,6 @@ if ($DryRun) { Write-Host "(dry run) would publish $tag with $name and PowerCost
 
 $stable = Join-Path ([IO.Path]::GetTempPath()) 'PowerCost-setup.exe'
 Copy-Item -LiteralPath $installer -Destination $stable -Force
-& $gh release create $tag $installer $stable --title "PowerCost $version" --notes-file $notesFile --target main
+& $gh release create $tag $installer $stable --title $title --notes-file $notesFile --target main
 if ($LASTEXITCODE) { throw "gh release create failed" }
 Write-Host "Published: https://github.com/Nikolaicho-sta/powercost/releases/tag/$tag" -ForegroundColor Green
