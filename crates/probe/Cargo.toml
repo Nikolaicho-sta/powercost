@@ -6,7 +6,7 @@ license.workspace = true
 
 [dependencies]
 chrono = "0.4.45"
-gap-classifier = { version = "0.1.0", path = "../gap-classifier" }
-pc-core = { version = "0.1.0", path = "../pc-core" }
-sensors = { version = "0.1.0", path = "../sensors" }
-state-detection = { version = "0.1.0", path = "../state-detection" }
+gap-classifier = { path = "../gap-classifier" }
+pc-core = { path = "../pc-core" }
+sensors = { path = "../sensors" }
+state-detection = { path = "../state-detection" }

@@ -7,10 +7,10 @@ license.workspace = true
 [dependencies]
 chrono = "0.4.45"
 chrono-tz = "0.10.4"
-cost-engine = { version = "0.1.0", path = "../cost-engine" }
-estimator = { version = "0.1.0", path = "../estimator" }
-gap-classifier = { version = "0.1.0", path = "../gap-classifier" }
-pc-core = { version = "0.1.0", path = "../pc-core" }
+cost-engine = { path = "../cost-engine" }
+estimator = { path = "../estimator" }
+gap-classifier = { path = "../gap-classifier" }
+pc-core = { path = "../pc-core" }
 rust_decimal = "1.43.0"
-storage = { version = "0.1.0", path = "../storage" }
-tariff-engine = { version = "0.1.0", path = "../tariff-engine" }
+storage = { path = "../storage" }
+tariff-engine = { path = "../tariff-engine" }

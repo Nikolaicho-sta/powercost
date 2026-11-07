@@ -6,7 +6,7 @@ license.workspace = true
 
 [dependencies]
 nvml-wrapper = "0.13.0"
-pc-core = { version = "0.1.0", path = "../pc-core" }
+pc-core = { path = "../pc-core" }
 thiserror = "2.0.21"
 
 [target."cfg(windows)".dependencies]

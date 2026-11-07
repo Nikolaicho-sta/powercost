@@ -61,6 +61,8 @@ pub struct AppInfo {
     version: &'static str,
     /// e.g. "M8 01fbf4a": the commit this build was made from.
     build: &'static str,
+    /// "folder" (built from a project folder that still exists) or "github" (updates come from GitHub Releases).
+    update_mode: crate::updater::UpdateSource,
     tracker_running: bool,
     sensor_issues: Vec<String>,
     data_dir: String,
@@ -76,6 +78,7 @@ pub fn get_app_info(state: State<AppState>) -> AppInfo {
         preview: false,
         version: env!("CARGO_PKG_VERSION"),
         build: env!("POWERCOST_BUILD"),
+        update_mode: crate::updater::mode(),
         tracker_running: shared.tracker_running,
         sensor_issues: shared.issues.clone(),
         data_dir: state.data_dir.display().to_string(),
@@ -90,10 +93,11 @@ pub fn get_update_status(state: State<AppState>) -> crate::updater::UpdateStatus
     lock(&state.update).clone()
 }
 
-/// Check the project folder for a newer commit now (a local `git log`, no network).
+/// Check for an update now. Called when the user presses "Check for updates", so in GitHub mode this
+/// is an explicit, user-initiated request to github.com.
 #[tauri::command(async)]
 pub fn check_update(state: State<AppState>) -> crate::updater::UpdateStatus {
-    if state.simulated {
+    if state.simulated && crate::online::test_api().is_none() {
         return crate::updater::UpdateStatus::Unavailable { reason: "updates are not checked in demo (--sim) mode".into() };
     }
     let status = crate::updater::check();
@@ -101,13 +105,22 @@ pub fn check_update(state: State<AppState>) -> crate::updater::UpdateStatus {
     status
 }
 
-/// Run the update script. It quits this app, rebuilds, installs over it and starts the new one.
+/// Folder mode: run the update script (it quits this app, rebuilds, installs and restarts).
+/// GitHub mode: download and verify the installer, start the helper and exit; the helper installs
+/// over this copy and starts the new one.
 #[tauri::command(async)]
-pub fn start_update(state: State<AppState>) -> CmdResult<()> {
-    if state.simulated {
+pub fn start_update(app: tauri::AppHandle, state: State<AppState>) -> CmdResult<()> {
+    if state.simulated && crate::online::test_api().is_none() {
         return Err("updating is not available in demo (--sim) mode".into());
     }
-    crate::updater::start()
+    match crate::updater::mode() {
+        crate::updater::UpdateSource::Folder => crate::updater::start_folder(),
+        crate::updater::UpdateSource::Github => {
+            crate::online::install_latest()?;
+            app.exit(0); // a normal exit: the tracker flushes its last minute first
+            Ok(())
+        }
+    }
 }
 
 #[tauri::command]

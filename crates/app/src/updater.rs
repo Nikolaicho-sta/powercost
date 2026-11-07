@@ -1,7 +1,13 @@
-//! Update check and one-click update. Local only: the app compares the commit it was built from
-//! with the newest commit of the project folder it was built in (`git log`, no network). Updating
-//! runs `scripts/update.ps1`, which quits this app cleanly, rebuilds, installs over it and restarts.
+//! Update check and one-click update, in two modes:
+//!
+//! * **Folder** (the developer's PC): the app was built from a project folder that still exists. It
+//!   compares its own commit with the folder's newest commit (`git log`, no network) and updates by
+//!   running `scripts/update.ps1` (rebuild, install over, restart).
+//! * **Github** (everyone else): there is no project folder, so it looks at GitHub Releases, downloads
+//!   the installer, verifies its checksum and installs it (see `online.rs`). This is the only
+//!   network use and it is opt-in.
 
+use crate::online;
 use serde::Serialize;
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -9,16 +15,24 @@ use std::process::Command;
 pub const BUILT_COMMIT: &str = env!("POWERCOST_COMMIT");
 pub const SOURCE_DIR: &str = env!("POWERCOST_SOURCE");
 
+#[derive(Clone, Copy, Serialize, Debug, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum UpdateSource {
+    Folder,
+    Github,
+}
+
 #[derive(Clone, Serialize, Default, Debug, PartialEq)]
 #[serde(tag = "state", rename_all = "snake_case")]
 pub enum UpdateStatus {
     /// Not checked yet.
     #[default]
     Unknown,
-    /// The project folder this build came from is missing, so there is nothing to update from.
+    /// Nothing to update from, or the check failed; `reason` says why.
     Unavailable { reason: String },
     UpToDate,
-    Available { hash: String, subject: String },
+    /// `id` identifies the update (commit hash or version) so it is announced once; `label` is for display.
+    Available { source: UpdateSource, id: String, label: String, subject: String },
 }
 
 #[cfg(windows)]
@@ -33,7 +47,20 @@ fn script_path(source: &Path) -> PathBuf {
     source.join("scripts").join("update.ps1")
 }
 
-/// Pure decision, separated so it can be tested: `latest` is `(hash, subject)` of the folder's HEAD.
+fn folder_usable() -> bool {
+    !SOURCE_DIR.is_empty() && script_path(Path::new(SOURCE_DIR)).is_file()
+}
+
+/// Which mode this installation uses. The test hook forces GitHub mode.
+pub fn mode() -> UpdateSource {
+    if online::test_api().is_none() && folder_usable() {
+        UpdateSource::Folder
+    } else {
+        UpdateSource::Github
+    }
+}
+
+/// Pure decision for folder mode, separated so it can be tested: `latest` is `(hash, subject)` of HEAD.
 pub fn decide(built: &str, latest: Option<(String, String)>) -> UpdateStatus {
     match latest {
         None => UpdateStatus::Unavailable { reason: "could not read the project folder's latest commit (is git installed?)".into() },
@@ -43,7 +70,7 @@ pub fn decide(built: &str, latest: Option<(String, String)>) -> UpdateStatus {
             } else if hash == built {
                 UpdateStatus::UpToDate
             } else {
-                UpdateStatus::Available { hash, subject }
+                UpdateStatus::Available { source: UpdateSource::Folder, label: hash.chars().take(7).collect(), id: hash, subject }
             }
         }
     }
@@ -61,17 +88,22 @@ fn latest_commit(source: &Path) -> Option<(String, String)> {
     (!hash.is_empty()).then_some((hash, subject))
 }
 
+/// Check now. Folder mode is a local `git log`; GitHub mode makes a request to github.com, so callers
+/// only use it for a button press or when the user turned on the automatic check.
 pub fn check() -> UpdateStatus {
-    let source = Path::new(SOURCE_DIR);
-    if SOURCE_DIR.is_empty() || !script_path(source).is_file() {
-        return UpdateStatus::Unavailable { reason: format!("the project folder this app was built from was not found ({SOURCE_DIR})") };
+    match mode() {
+        UpdateSource::Folder => decide(BUILT_COMMIT, latest_commit(Path::new(SOURCE_DIR))),
+        UpdateSource::Github => match online::check() {
+            Ok(None) => UpdateStatus::UpToDate,
+            Ok(Some(o)) => UpdateStatus::Available { source: UpdateSource::Github, id: o.version.clone(), label: format!("version {}", o.version), subject: o.subject },
+            Err(reason) => UpdateStatus::Unavailable { reason },
+        },
     }
-    decide(BUILT_COMMIT, latest_commit(source))
 }
 
-/// Start the update script in its own console window (so the user can watch it) and return at once.
-/// The script quits this app itself, after the build, so the app keeps tracking meanwhile.
-pub fn start() -> Result<(), String> {
+/// Folder mode: run the update script in its own console window (so the user can watch it) and
+/// return at once. The script quits this app itself, after the build.
+pub fn start_folder() -> Result<(), String> {
     let source = Path::new(SOURCE_DIR);
     let script = script_path(source);
     if !script.is_file() {
@@ -111,7 +143,10 @@ mod tests {
 
     #[test]
     fn different_commit_is_an_update() {
-        assert_eq!(decide("abc", latest("def")), UpdateStatus::Available { hash: "def".into(), subject: "M10".into() });
+        assert_eq!(
+            decide("abc", latest("def1234567")),
+            UpdateStatus::Available { source: UpdateSource::Folder, id: "def1234567".into(), label: "def1234".into(), subject: "M10".into() }
+        );
     }
 
     #[test]
@@ -121,8 +156,9 @@ mod tests {
     }
 
     #[test]
-    fn real_check_does_not_panic() {
-        // In a checkout this is UpToDate or Available; elsewhere Unavailable. Never a panic.
-        eprintln!("update check in this checkout: {:?}", check());
+    fn status_serialises_for_the_ui() {
+        let s = serde_json::to_value(UpdateStatus::Available { source: UpdateSource::Github, id: "0.2.0".into(), label: "version 0.2.0".into(), subject: "x".into() }).unwrap();
+        assert_eq!(s["state"], "available");
+        assert_eq!(s["source"], "github");
     }
 }

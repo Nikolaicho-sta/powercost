@@ -8,6 +8,7 @@
 mod commands;
 mod state;
 mod tracker_thread;
+mod online;
 mod updater;
 
 use chrono::Utc;
@@ -76,14 +77,18 @@ pub(crate) fn update_tray(app: &AppHandle, text: &str) {
     }
 }
 
-/// Checks the project folder for a newer commit shortly after start and then every 6 hours. When one
-/// is found it shows ONE Windows notification per new commit. Local `git log` only, no network.
+/// Background update check; shows ONE Windows notification per new update.
+/// * Folder mode: a local `git log` about a minute after start, then every 6 hours. No network.
+/// * GitHub mode: only when the user turned on "check for updates automatically" in Settings (off by
+///   default, it is a network call): about once a day. Pressing "Check for updates" always works.
 fn spawn_update_checker(app: AppHandle) {
     use tauri_plugin_notification::NotificationExt;
     let _ = std::thread::Builder::new().name("update-check".into()).spawn(move || {
+        let stopped = || app.state::<AppState>().stop.load(Ordering::SeqCst);
+        // wake once a minute-ish; decide what is due
         let sleep = |secs: u64| {
             for _ in 0..secs / 5 {
-                if app.state::<AppState>().stop.load(Ordering::SeqCst) {
+                if stopped() {
                     return false;
                 }
                 std::thread::sleep(std::time::Duration::from_secs(5));
@@ -93,20 +98,29 @@ fn spawn_update_checker(app: AppHandle) {
         if !sleep(60) {
             return;
         }
+        let mut last: Option<std::time::Instant> = None;
         loop {
-            let status = updater::check();
             let state = app.state::<AppState>();
-            *state.update.lock().unwrap_or_else(|e| e.into_inner()) = status.clone();
-            if let updater::UpdateStatus::Available { hash, subject } = status {
-                let marker = state.data_dir.join("update_notified.txt");
-                if std::fs::read_to_string(&marker).map(|s| s.trim() != hash).unwrap_or(true) {
-                    let body = format!("{subject}: open PowerCost, Settings, and press \"Update now\".");
-                    if app.notification().builder().title("PowerCost update available").body(body).show().is_ok() {
-                        let _ = std::fs::write(&marker, &hash);
+            let (every, wanted) = match updater::mode() {
+                updater::UpdateSource::Folder => (6 * 3600, true),
+                updater::UpdateSource::Github => (24 * 3600, state.live.lock().unwrap_or_else(|e| e.into_inner()).settings.online_update_check),
+            };
+            let due = wanted && last.is_none_or(|t| t.elapsed().as_secs() >= every);
+            if due {
+                last = Some(std::time::Instant::now());
+                let status = updater::check();
+                *state.update.lock().unwrap_or_else(|e| e.into_inner()) = status.clone();
+                if let updater::UpdateStatus::Available { id, label, subject, .. } = status {
+                    let marker = state.data_dir.join("update_notified.txt");
+                    if std::fs::read_to_string(&marker).map(|s| s.trim() != id).unwrap_or(true) {
+                        let body = format!("{label}: {subject} Open PowerCost, Settings, and press \"Update now\".");
+                        if app.notification().builder().title("PowerCost update available").body(body).show().is_ok() {
+                            let _ = std::fs::write(&marker, &id);
+                        }
                     }
                 }
             }
-            if !sleep(6 * 3600) {
+            if !sleep(600) {
                 return;
             }
         }

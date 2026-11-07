@@ -70,9 +70,9 @@ footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40
     <div class="hero">
       <h1>What does your PC cost in electricity?</h1>
       <p class="lead">PowerCost sits in the Windows system tray and estimates your PC's electricity cost, split by what it was doing (active, idle, sleep, off) and by tariff period (day and night), using the prices of your region.</p>
-      <a class="btn" href="https://github.com/Nikolaicho-sta/powercost/releases/download/v0.1.0/PowerCost_0.1.0_x64-setup.exe">Download for Windows</a>
+      <a class="btn" href="https://github.com/Nikolaicho-sta/powercost/releases/latest/download/PowerCost-setup.exe">Download for Windows</a>
       <a class="btn ghost" href="https://github.com/Nikolaicho-sta/powercost">View the source</a>
-      <p class="meta">Version 0.1.0 · Windows 10 / 11, 64-bit · 3.4 MB · free · no account</p>
+      <p class="meta"><span id="ver">Latest version</span> · Windows 10 / 11, 64-bit · about 4 MB · free · no account</p>
       <div class="shot"><img src="https://raw.githubusercontent.com/Nikolaicho-sta/powercost/main/site/img/dashboard.png" width="846" height="955" alt="The PowerCost dashboard: today's estimated cost, a cost-over-time chart, breakdowns by power state and tariff period, and what-if scenarios"></div>
     </div>
 
@@ -106,7 +106,7 @@ footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40
     <section id="install">
       <h2>Install</h2>
       <ol class="steps">
-        <li>Download <a href="https://github.com/Nikolaicho-sta/powercost/releases/download/v0.1.0/PowerCost_0.1.0_x64-setup.exe"><code>PowerCost_0.1.0_x64-setup.exe</code></a> and run it. It installs for your user only and needs no administrator rights.</li>
+        <li>Download <a href="https://github.com/Nikolaicho-sta/powercost/releases/latest/download/PowerCost-setup.exe"><code>PowerCost-setup.exe</code></a> and run it. It installs for your user only and needs no administrator rights.</li>
         <li>Follow the short setup wizard: region, tariff, laptop or desktop.</li>
         <li>Closing the window does not quit the app. It keeps tracking from the tray; use the tray icon's menu, <i>Quit PowerCost</i>, to stop it.</li>
       </ol>
@@ -114,11 +114,11 @@ footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40
         <h3>Windows may warn you</h3>
         <p style="margin:0">The installer is not code-signed yet, so Windows SmartScreen may show "Windows protected your PC". Click <b>More info</b>, then <b>Run anyway</b>. You can check the download is intact:</p>
         <ul>
-          <li>SHA-256: <code>5d8fd897171b1d3baba6dba4fb63710595681392a9651437885197b179372f08</code></li>
-          <li>PowerShell: <code>Get-FileHash .\PowerCost_0.1.0_x64-setup.exe</code></li>
+          <li>SHA-256: <code id="sha">listed in the notes of the <a href="https://github.com/Nikolaicho-sta/powercost/releases/latest">latest release</a></code></li>
+          <li>PowerShell: <code>Get-FileHash .\PowerCost-setup.exe</code></li>
         </ul>
       </div>
-      <p class="sub" style="margin-top:14px"><b>Requirements:</b> Windows 10 or 11 (64-bit). The Microsoft Edge WebView2 runtime is built into Windows 11; on Windows 10 the installer fetches it if it is missing. <b>Updating:</b> download and run the newest installer; your data in <code>%APPDATA%\PowerCost</code> is kept. <b>Uninstall:</b> Windows Settings, Apps. There is no Linux or macOS version yet.</p>
+      <p class="sub" style="margin-top:14px"><b>Requirements:</b> Windows 10 or 11 (64-bit). The Microsoft Edge WebView2 runtime is built into Windows 11; on Windows 10 the installer fetches it if it is missing. <b>Updating:</b> in PowerCost open Settings, then Updates, and press "Check for updates" and "Update now". It downloads the new installer from GitHub, verifies its checksum and installs it over the old one; your data in <code>%APPDATA%\PowerCost</code> is kept. Automatic checks are off unless you switch them on. <b>Uninstall:</b> Windows Settings, Apps. There is no Linux or macOS version yet.</p>
     </section>
 
     <section id="privacy">
@@ -131,6 +131,18 @@ footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40
     </section>
   </main>
 
+  <script>
+  // Fills in the newest version and checksum from the public GitHub API. The page works without it.
+  fetch("https://api.github.com/repos/Nikolaicho-sta/powercost/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (rel) {
+      if (!rel) return;
+      document.getElementById("ver").textContent = "Version " + String(rel.tag_name).replace(/^v/, "");
+      var a = (rel.assets || []).find(function (x) { return x.name === "PowerCost-setup.exe"; });
+      if (a && /^sha256:[0-9a-f]{64}$/i.test(a.digest || "")) document.getElementById("sha").textContent = a.digest.slice(7);
+    })
+    .catch(function () {});
+  </script>
   <footer>
     PowerCost is an estimate tool, not a metering device. <a href="https://github.com/Nikolaicho-sta/powercost">Source</a> · <a href="https://github.com/Nikolaicho-sta/powercost/releases">All releases</a> · <a href="https://github.com/Nikolaicho-sta/powercost/issues">Report a problem</a>
   </footer>

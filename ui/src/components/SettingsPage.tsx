@@ -236,7 +236,17 @@ export function SettingsPage({ info, update, onUpdate, onSaved, onCalibrate, onO
           Updates
           <InfoTip text="Updating rebuilds PowerCost from the project folder and installs it over this copy. Your data and settings are kept. The check never goes online." />
         </h2>
-        <UpdateBox status={update} onStatus={onUpdate} />
+        <UpdateBox status={update} mode={info?.update_mode ?? "folder"} onStatus={onUpdate} />
+        {info?.update_mode === "github" && (
+          <div className="form" style={{ marginTop: 12 }}>
+            <Check
+              label="Look for updates automatically (about once a day)"
+              checked={draft.online_update_check}
+              onChange={(v) => upd((d) => (d.online_update_check = v))}
+              help="Off by default. When on, PowerCost asks github.com once a day whether a newer release exists and shows a notification. It sends nothing about you or your usage. Remember to press Save settings."
+            />
+          </div>
+        )}
       </section>
 
       <p className="note span-12" style={{ margin: 0 }}>

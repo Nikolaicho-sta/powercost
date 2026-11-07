@@ -134,7 +134,7 @@ export function App() {
         </div>
       </header>
 
-      <UpdateBanner status={update} />
+      <UpdateBanner status={update} mode={info?.update_mode ?? "folder"} />
       {error && <div className="banner" role="alert"><strong>Could not load data.</strong> {error}</div>}
       {info?.tariff_note && <div className="banner" role="status"><strong>Tariff:</strong> {info.tariff_note}</div>}
       {info && info.sensor_issues.length > 0 && (

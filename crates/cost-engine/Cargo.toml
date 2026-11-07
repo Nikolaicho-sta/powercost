@@ -7,10 +7,10 @@ license.workspace = true
 [dependencies]
 chrono = { version = "0.4.45", features = ["serde"] }
 chrono-tz = "0.10.4"
-pc-core = { version = "0.1.0", path = "../pc-core" }
+pc-core = { path = "../pc-core" }
 rust_decimal = "1.43.0"
 serde = { version = "1.0.229", features = ["derive"] }
-tariff-engine = { version = "0.1.0", path = "../tariff-engine" }
+tariff-engine = { path = "../tariff-engine" }
 thiserror = "2.0.21"
 
 [dev-dependencies]

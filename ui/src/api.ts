@@ -83,6 +83,8 @@ export interface AppInfo {
   sensor_issues: string[];
   /** e.g. "M8 01fbf4a": which commit this build came from. */
   build?: string;
+  /** "folder": updates are rebuilt from the project folder; "github": installed from a release, updates come from GitHub Releases. */
+  update_mode?: "folder" | "github";
   data_dir?: string;
   tariff_note?: string | null;
   autostart_enabled?: boolean;
@@ -92,7 +94,7 @@ export type UpdateStatus =
   | { state: "unknown" }
   | { state: "unavailable"; reason: string }
   | { state: "up_to_date" }
-  | { state: "available"; hash: string; subject: string };
+  | { state: "available"; source: "folder" | "github"; id: string; label: string; subject: string };
 
 export type Theme = "system" | "light" | "dark";
 export interface CalibrationPoint { util_permille: number; watts: string }
@@ -129,6 +131,8 @@ export interface Settings {
   autostart: boolean;
   theme: Theme;
   detail_retention_days: number;
+  /** Check GitHub for a newer release about once a day (a network call; off by default). */
+  online_update_check: boolean;
 }
 export interface PresetInfo {
   id: string;
@@ -223,6 +227,7 @@ function previewDefaults(): Settings {
     autostart: false,
     theme: "system",
     detail_retention_days: 90,
+    online_update_check: false,
   };
 }
 
@@ -314,7 +319,7 @@ export const api = {
   info: async (): Promise<AppInfo> =>
     inTauri
       ? invoke("get_app_info")
-      : { simulated: true, preview: true, version: "preview", tracker_running: false, sensor_issues: [] },
+      : { simulated: true, preview: true, version: "preview", update_mode: "github", tracker_running: false, sensor_issues: [] },
 
   /** The last (cached) update check. Local only: compares this build with the project folder. */
   updateStatus: async (): Promise<UpdateStatus> => (inTauri ? invoke("get_update_status") : { state: "unavailable", reason: "updates only work inside the PowerCost app" }),
