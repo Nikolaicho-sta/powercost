@@ -25,8 +25,16 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
   const [kind, setKind] = useState<"laptop" | "desktop">("laptop");
   const [monitor, setMonitor] = useState(false);
   const [wall, setWall] = useState(false);
+  // Automatic update check is a network call, so it starts unticked and is only offered when this
+  // copy updates from GitHub (a copy built from a project folder checks locally).
+  const [autoUpdate, setAutoUpdate] = useState(false);
+  const [githubUpdates, setGithubUpdates] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    api.info().then((i) => setGithubUpdates(i.update_mode === "github")).catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const { locale, timezone } = systemLocale();
@@ -74,6 +82,7 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
     s.estimator.baseline_w = kind === "laptop" ? "8" : "20";
     s.estimator.include_monitor = monitor;
     s.estimator.unplugged_when_off = wall;
+    s.online_update_check = githubUpdates && autoUpdate;
     try {
       const saved = await api.saveSettings(s);
       onDone(saved, openCalibration, openTariffs || own);
@@ -99,7 +108,7 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
           <ul>
             <li><b>Everything stays on this computer.</b> There is no account, no telemetry.</li>
             <li><b>Every number is an estimate.</b> The app shows how each was obtained and how confident it is.</li>
-            <li><b>The only network use is optional:</b> a one-time lookup of your country, which you can switch on below. Nothing else leaves your PC.</li>
+            <li><b>Network use is optional and off by default:</b> a one-time lookup of your country, and checking for new versions. You choose each below. Nothing else leaves your PC.</li>
           </ul>
         </div>
       )}
@@ -161,6 +170,15 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
           </div>
           <Check label="Count my monitor's power while I am active" checked={monitor} onChange={setMonitor} help="Off by default. Tick it if you use an external monitor you want included." />
           <Check label="I switch the PC off at the wall when it is shut down (0 W)" checked={wall} onChange={setWall} />
+          {githubUpdates && (
+            <div className="optin">
+              <Check label="Tell me when a new version is available (optional)" checked={autoUpdate} onChange={setAutoUpdate} />
+              <p className="note">
+                If you tick this, PowerCost asks github.com about once a day whether a newer release exists and shows a notification. GitHub sees your IP address as any website would; nothing about you or your usage is sent.
+                Leave it unticked and nothing goes online until you press "Check for updates" in Settings.
+              </p>
+            </div>
+          )}
         </div>
       )}
 
