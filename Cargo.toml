@@ -5,7 +5,7 @@ default-members = ["crates/pc-core", "crates/tariff-engine", "crates/cost-engine
 
 [workspace.package]
 edition = "2021"
-version = "0.2.0"
+version = "0.2.1"
 license = "MIT"
 
 # Small, quiet binary for a program that sits in the tray all day.
