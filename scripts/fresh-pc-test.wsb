@@ -2,7 +2,13 @@
   Windows Sandbox config: a clean, throw-away Windows to try PowerCost as a brand-new user.
   Double-click this file. Nothing is shared with your PC (no mapped folders), and everything
   inside the sandbox is deleted when you close its window.
-  It opens the download website in the sandbox's browser: download the installer from there.
+
+  The sandbox has no browser, so on start it downloads two installers from the project's
+  GitHub releases onto its Desktop and opens the Desktop:
+    PowerCost-setup.exe              the newest release (test the first-run experience)
+    PowerCost-OLD-0.2.0-setup.exe    an older release (install it, then Settings > Updates > Check
+                                     for updates to test the real in-app update)
+  Install only one of them. A blue "More info" SmartScreen warning is expected (unsigned).
 -->
 <Configuration>
   <VGpu>Default</VGpu>
@@ -13,6 +19,6 @@
   <ClipboardRedirection>Enable</ClipboardRedirection>
   <MemoryInMB>4096</MemoryInMB>
   <LogonCommand>
-    <Command>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" https://power-cost.vercel.app</Command>
+    <Command>powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "$ProgressPreference='SilentlyContinue'; $d=[Environment]::GetFolderPath('Desktop'); $r='https://github.com/Nikolaicho-sta/powercost/releases'; try { Invoke-WebRequest ($r+'/latest/download/PowerCost-setup.exe') -OutFile ($d+'\PowerCost-setup.exe'); Invoke-WebRequest ($r+'/download/v0.2.0/PowerCost_0.2.0_x64-setup.exe') -OutFile ($d+'\PowerCost-OLD-0.2.0-setup.exe') } catch { Write-Host ('Download failed: '+$_.Exception.Message); Read-Host 'Press Enter' }; explorer.exe $d"</Command>
   </LogonCommand>
 </Configuration>
