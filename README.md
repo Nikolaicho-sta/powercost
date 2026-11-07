@@ -6,7 +6,7 @@ PowerCost is a small Windows program that sits in the system tray and **estimate
 * **Honest.** Every figure is an *estimate*. The app shows how each number was obtained and how confident it is. Read [Accuracy and limitations](#accuracy-and-limitations) before trusting a figure.
 * **Light.** The background tracker uses well under 1 % of one CPU core and about 30 MB of private memory (see the limitations for the exact numbers).
 
-**Website and download:** https://powercost-nikihristovjunior-6330s-projects.vercel.app (the page source is in [site/](site/); the installer is attached to the [GitHub release](https://github.com/Nikolaicho-sta/powercost/releases)).
+**Website and download:** https://power-cost.vercel.app (the page source is in [site/](site/); the installer is attached to the [GitHub release](https://github.com/Nikolaicho-sta/powercost/releases)).
 
 ## What it does
 
