@@ -17,6 +17,13 @@ fn main() {
         _ => "unknown build".to_string(),
     };
     println!("cargo:rustc-env=POWERCOST_BUILD={label}");
+    // The full commit and the project folder this build came from. The app compares them with the
+    // folder's newest commit to tell you an update is ready (a local check, no network).
+    println!("cargo:rustc-env=POWERCOST_COMMIT={}", git(&["rev-parse", "HEAD"]).unwrap_or_default());
+    let manifest = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default());
+    let source = manifest.join("..").join("..").canonicalize().map(|p| p.display().to_string()).unwrap_or_default();
+    let source = source.strip_prefix(r"\\?\").map(str::to_string).unwrap_or(source);
+    println!("cargo:rustc-env=POWERCOST_SOURCE={source}");
     println!("cargo:rerun-if-changed=../../.git/HEAD");
     println!("cargo:rerun-if-changed=../../.git/index");
     tauri_build::build()

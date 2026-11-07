@@ -88,6 +88,12 @@ export interface AppInfo {
   autostart_enabled?: boolean;
 }
 
+export type UpdateStatus =
+  | { state: "unknown" }
+  | { state: "unavailable"; reason: string }
+  | { state: "up_to_date" }
+  | { state: "available"; hash: string; subject: string };
+
 export type Theme = "system" | "light" | "dark";
 export interface CalibrationPoint { util_permille: number; watts: string }
 export interface EstimatorCfg {
@@ -309,6 +315,16 @@ export const api = {
     inTauri
       ? invoke("get_app_info")
       : { simulated: true, preview: true, version: "preview", tracker_running: false, sensor_issues: [] },
+
+  /** The last (cached) update check. Local only: compares this build with the project folder. */
+  updateStatus: async (): Promise<UpdateStatus> => (inTauri ? invoke("get_update_status") : { state: "unavailable", reason: "updates only work inside the PowerCost app" }),
+  /** Check the project folder for a newer commit now. */
+  checkUpdate: async (): Promise<UpdateStatus> => (inTauri ? invoke("check_update") : { state: "unavailable", reason: "updates only work inside the PowerCost app" }),
+  /** Runs the update script: PowerCost quits, rebuilds, installs over itself and restarts. */
+  startUpdate: async (): Promise<void> => {
+    if (inTauri) return invoke("start_update");
+    throw PREVIEW_ONLY;
+  },
 
   getSettings: async (): Promise<Settings> => (inTauri ? invoke("get_settings") : previewLoad()),
 

@@ -24,7 +24,8 @@ There is exactly **one** possible network call, and it is **off by default**:
 The app's content-security policy allows connections to that single host and nothing else. Tariff prices are **not** downloaded: they are data files shipped with the app or entered by you (a future opt-in "update tariffs" feature would be documented here before it exists).
 
 ## Other things the app does on your PC
-* **Notifications:** budget alerts are ordinary local Windows notifications.
+* **Notifications:** budget alerts and "update available" notices are ordinary local Windows notifications.
+* **Update check:** about a minute after start and then every 6 hours, the app runs `git log -1` in the project folder it was built from and compares the commit with its own. No network is involved; the result is only used to show a notice and the "Update now" button. A marker file `update_notified.txt` in the data folder remembers which commit you were already told about. "Update now" runs `scripts\update.ps1` from that folder (see D42, D43).
 * **Start with Windows (optional, off by default):** adds one value named `PowerCost` to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` (per-user, no admin rights). Turning the option off removes it.
 * **Export:** writes a CSV or JSON file only to the location you choose in the save dialog.
 

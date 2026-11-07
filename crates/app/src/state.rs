@@ -53,6 +53,7 @@ pub struct AppState {
     pub shared: Arc<Mutex<Shared>>,
     pub stop: Arc<AtomicBool>,
     pub tracker: Mutex<Option<std::thread::JoinHandle<()>>>,
+    pub update: Mutex<crate::updater::UpdateStatus>,
 }
 
 impl AppState {

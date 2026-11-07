@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, type AppInfo, type Dashboard, type PeriodKind, type Settings, type Theme } from "./api";
+import { api, type AppInfo, type Dashboard, type PeriodKind, type Settings, type Theme, type UpdateStatus } from "./api";
+import { UpdateBanner } from "./components/UpdateBox";
 import { PERIOD_UNIT, periodTitle } from "./format";
 import { BudgetMeter } from "./components/BudgetMeter";
 import { PeriodBreakdown, StateBreakdown } from "./components/Breakdown";
@@ -32,6 +33,7 @@ export function App() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [calibrating, setCalibrating] = useState(false);
+  const [update, setUpdate] = useState<UpdateStatus>({ state: "unknown" });
 
   // Switching between Today/Week/Month/Year always returns to the current period.
   const setPeriod = (p: PeriodKind) => {
@@ -69,6 +71,14 @@ export function App() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [view, canGoBack, canGoForward, goBack, goForward]);
+
+  // The background checker refreshes the cached status every few hours; read it now and every 10 min.
+  useEffect(() => {
+    const read = () => api.updateStatus().then(setUpdate).catch(() => undefined);
+    read();
+    const t = setInterval(read, 600_000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     api.info().then(setInfo).catch(() => undefined);
@@ -124,6 +134,7 @@ export function App() {
         </div>
       </header>
 
+      <UpdateBanner status={update} />
       {error && <div className="banner" role="alert"><strong>Could not load data.</strong> {error}</div>}
       {info?.tariff_note && <div className="banner" role="status"><strong>Tariff:</strong> {info.tariff_note}</div>}
       {info && info.sensor_issues.length > 0 && (
@@ -195,7 +206,7 @@ export function App() {
 
       {view === "stopwatch" && <StopwatchPage />}
       {view === "tariffs" && <TariffEditor onChanged={() => api.info().then(setInfo)} />}
-      {view === "settings" && <SettingsPage info={info} onSaved={onSaved} onCalibrate={() => setCalibrating(true)} onOpenTariffs={() => setView("tariffs")} />}
+      {view === "settings" && <SettingsPage info={info} update={update} onUpdate={setUpdate} onSaved={onSaved} onCalibrate={() => setCalibrating(true)} onOpenTariffs={() => setView("tariffs")} />}
 
       {calibrating && settings && (
         <CalibrationWizard settings={settings} onClose={() => setCalibrating(false)} onDone={onSaved} />

@@ -84,6 +84,32 @@ pub fn get_app_info(state: State<AppState>) -> AppInfo {
     }
 }
 
+/// The last update check (cached; the background checker refreshes it every few hours).
+#[tauri::command]
+pub fn get_update_status(state: State<AppState>) -> crate::updater::UpdateStatus {
+    lock(&state.update).clone()
+}
+
+/// Check the project folder for a newer commit now (a local `git log`, no network).
+#[tauri::command(async)]
+pub fn check_update(state: State<AppState>) -> crate::updater::UpdateStatus {
+    if state.simulated {
+        return crate::updater::UpdateStatus::Unavailable { reason: "updates are not checked in demo (--sim) mode".into() };
+    }
+    let status = crate::updater::check();
+    *lock(&state.update) = status.clone();
+    status
+}
+
+/// Run the update script. It quits this app, rebuilds, installs over it and starts the new one.
+#[tauri::command(async)]
+pub fn start_update(state: State<AppState>) -> CmdResult<()> {
+    if state.simulated {
+        return Err("updating is not available in demo (--sim) mode".into());
+    }
+    crate::updater::start()
+}
+
 #[tauri::command]
 pub fn get_settings(state: State<AppState>) -> Settings {
     lock(&state.live).settings.clone()

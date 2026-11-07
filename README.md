@@ -27,7 +27,9 @@ Download `PowerCost_<version>_x64-setup.exe` from the build output (see [Build](
 
 ## Update
 
-When this project folder has newer code, **double-click `Update PowerCost.cmd`** (or run `scripts\update.ps1`). It:
+**From inside the app:** when the project folder has a newer commit, PowerCost shows a Windows notification and a banner. Open **Settings → Updates** (or use the banner) and press **Update now**, then confirm. The check is local (a `git log` in the project folder; nothing goes online) and runs about a minute after start and every 6 hours; **Check for updates** runs it at once. Uncommitted edits are not detected.
+
+**Without the app:** when this project folder has newer code, **double-click `Update PowerCost.cmd`** (or run `scripts\update.ps1`). Either way it:
 
 1. asks the running PowerCost to quit cleanly (it saves its last minute; nothing is force-killed),
 2. rebuilds the interface and the installer,

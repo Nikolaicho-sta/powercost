@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { api, errorLines, type AppInfo, type PowerStateName, type PresetInfo, type Settings, type Theme } from "../api";
+import { api, errorLines, type AppInfo, type PowerStateName, type PresetInfo, type Settings, type Theme, type UpdateStatus } from "../api";
+import { UpdateBox } from "./UpdateBox";
 import { formatMinor, parseMinor } from "../money";
 import { InfoTip } from "./InfoTip";
 import { Segmented } from "./Segmented";
@@ -16,7 +17,7 @@ function isoDate(d: Date) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 
-export function SettingsPage({ info, onSaved, onCalibrate, onOpenTariffs }: { info: AppInfo | null; onSaved: (s: Settings) => void; onCalibrate: () => void; onOpenTariffs: () => void }) {
+export function SettingsPage({ info, update, onUpdate, onSaved, onCalibrate, onOpenTariffs }: { info: AppInfo | null; update: UpdateStatus; onUpdate: (s: UpdateStatus) => void; onSaved: (s: Settings) => void; onCalibrate: () => void; onOpenTariffs: () => void }) {
   const [saved, setSaved] = useState<Settings | null>(null);
   const [draft, setDraft] = useState<Settings | null>(null);
   const [tariffs, setTariffs] = useState<PresetInfo[]>([]);
@@ -230,10 +231,18 @@ export function SettingsPage({ info, onSaved, onCalibrate, onOpenTariffs }: { in
         {expMsg && <Notice kind={expMsg.ok ? "ok" : "info"}>{expMsg.text}</Notice>}
       </section>
 
+      <section className="card span-12" aria-labelledby="s-update">
+        <h2 id="s-update">
+          Updates
+          <InfoTip text="Updating rebuilds PowerCost from the project folder and installs it over this copy. Your data and settings are kept. The check never goes online." />
+        </h2>
+        <UpdateBox status={update} onStatus={onUpdate} />
+      </section>
+
       <p className="note span-12" style={{ margin: 0 }}>
         PowerCost {info?.version ?? ""}
         {info?.build ? ` · build ${info.build}` : ""}
-        {info?.data_dir ? ` · data in ${info.data_dir}` : ""}. To update to a newer version, double-click <b>Update PowerCost.cmd</b> in the project folder.
+        {info?.data_dir ? ` · data in ${info.data_dir}` : ""}.
       </p>
 
       <div className="savebar span-12">

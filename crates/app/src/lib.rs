@@ -8,6 +8,7 @@
 mod commands;
 mod state;
 mod tracker_thread;
+mod updater;
 
 use chrono::Utc;
 use cost_engine::TariffSet;
@@ -75,6 +76,43 @@ pub(crate) fn update_tray(app: &AppHandle, text: &str) {
     }
 }
 
+/// Checks the project folder for a newer commit shortly after start and then every 6 hours. When one
+/// is found it shows ONE Windows notification per new commit. Local `git log` only, no network.
+fn spawn_update_checker(app: AppHandle) {
+    use tauri_plugin_notification::NotificationExt;
+    let _ = std::thread::Builder::new().name("update-check".into()).spawn(move || {
+        let sleep = |secs: u64| {
+            for _ in 0..secs / 5 {
+                if app.state::<AppState>().stop.load(Ordering::SeqCst) {
+                    return false;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(5));
+            }
+            true
+        };
+        if !sleep(60) {
+            return;
+        }
+        loop {
+            let status = updater::check();
+            let state = app.state::<AppState>();
+            *state.update.lock().unwrap_or_else(|e| e.into_inner()) = status.clone();
+            if let updater::UpdateStatus::Available { hash, subject } = status {
+                let marker = state.data_dir.join("update_notified.txt");
+                if std::fs::read_to_string(&marker).map(|s| s.trim() != hash).unwrap_or(true) {
+                    let body = format!("{subject}: open PowerCost, Settings, and press \"Update now\".");
+                    if app.notification().builder().title("PowerCost update available").body(body).show().is_ok() {
+                        let _ = std::fs::write(&marker, &hash);
+                    }
+                }
+            }
+            if !sleep(6 * 3600) {
+                return;
+            }
+        }
+    });
+}
+
 pub fn run() {
     let args: Vec<String> = std::env::args().collect();
     let simulated = args.iter().any(|a| a == "--sim");
@@ -104,6 +142,7 @@ pub fn run() {
         shared: Arc::new(Mutex::new(Shared::default())),
         stop: Arc::new(AtomicBool::new(false)),
         tracker: Mutex::new(None),
+        update: Mutex::new(updater::UpdateStatus::default()),
     };
 
     let mut builder = tauri::Builder::default();
@@ -129,6 +168,9 @@ pub fn run() {
             commands::get_dashboard,
             commands::get_what_if,
             commands::get_app_info,
+            commands::get_update_status,
+            commands::check_update,
+            commands::start_update,
             commands::get_settings,
             commands::save_settings,
             commands::list_tariffs,
@@ -183,6 +225,7 @@ pub fn run() {
             } else {
                 let handle = tracker_thread::spawn(app.handle().clone(), state.db_path.clone(), state.live.clone(), state.shared.clone(), state.stop.clone());
                 *state.tracker.lock().expect("tracker handle") = Some(handle);
+                spawn_update_checker(app.handle().clone());
             }
 
             if !start_in_tray {
