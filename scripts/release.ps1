@@ -52,7 +52,7 @@ $sha = if (Test-Path $installer) { (Get-FileHash $installer -Algorithm SHA256).H
 
 $body = "$Notes`r`n`r`nSHA-256 of ``$name``:`r`n``$sha```r`n`r`nThe installer is not code-signed, so Windows SmartScreen may warn: click `"More info`", then `"Run anyway`"."
 $notesFile = Join-Path ([IO.Path]::GetTempPath()) "powercost-release-notes.md"
-Set-Content -LiteralPath $notesFile -Value $body -Encoding utf8
+[IO.File]::WriteAllText($notesFile, $body, (New-Object System.Text.UTF8Encoding($false)))  # no BOM: it would show in the app
 
 if ($DryRun) { Write-Host "(dry run) would publish $tag with $name and PowerCost-setup.exe`n$body"; exit 0 }
 

@@ -110,7 +110,9 @@ pub fn evaluate(current: &str, release: &Release, test_mode: bool) -> Result<Opt
         return Err(format!("release {latest} points to an unexpected download address"));
     }
     let sha256 = expected_sha256(release, asset).ok_or_else(|| format!("release {latest} publishes no checksum, so the download cannot be verified"))?;
-    let subject = release.body.as_deref().and_then(|b| b.lines().map(str::trim).find(|l| !l.is_empty())).map(str::to_string).or_else(|| release.name.clone()).unwrap_or_default();
+    // trim also removes a byte-order mark that some tools put at the start of the notes
+    let clean = |s: &str| s.trim_matches(|c: char| c.is_whitespace() || c == '\u{feff}').to_string();
+    let subject = release.body.as_deref().and_then(|b| b.lines().map(clean).find(|l| !l.is_empty())).or_else(|| release.name.clone()).unwrap_or_default();
     Ok(Some(Offer { version: latest.to_string(), subject, url: asset.browser_download_url.clone(), name: asset.name.clone(), sha256, size: asset.size }))
 }
 
@@ -286,6 +288,12 @@ mod tests {
         assert!(evaluate("0.2.0", &r, false).unwrap().is_none());
         assert!(evaluate("0.10.0", &r, false).unwrap().is_none(), "0.10 is newer than 0.2, not older");
         assert!(evaluate("0.1.9", &release("v0.1.10", "x_x64-setup.exe", Some(HEX), ""), false).unwrap().is_some(), "0.1.10 is newer than 0.1.9");
+    }
+
+    #[test]
+    fn a_byte_order_mark_in_the_notes_does_not_reach_the_summary() {
+        let r = release("v0.2.0", "a_x64-setup.exe", Some(HEX), "\u{feff}Summary line\r\nmore");
+        assert_eq!(evaluate("0.1.0", &r, false).unwrap().unwrap().subject, "Summary line");
     }
 
     #[test]
