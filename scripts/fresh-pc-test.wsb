@@ -1,0 +1,18 @@
+<!--
+  Windows Sandbox config: a clean, throw-away Windows to try PowerCost as a brand-new user.
+  Double-click this file. Nothing is shared with your PC (no mapped folders), and everything
+  inside the sandbox is deleted when you close its window.
+  It opens the download website in the sandbox's browser: download the installer from there.
+-->
+<Configuration>
+  <VGpu>Default</VGpu>
+  <Networking>Default</Networking>
+  <AudioInput>Disable</AudioInput>
+  <VideoInput>Disable</VideoInput>
+  <PrinterRedirection>Disable</PrinterRedirection>
+  <ClipboardRedirection>Enable</ClipboardRedirection>
+  <MemoryInMB>4096</MemoryInMB>
+  <LogonCommand>
+    <Command>explorer.exe https://power-cost.vercel.app</Command>
+  </LogonCommand>
+</Configuration>

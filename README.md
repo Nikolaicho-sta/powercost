@@ -112,6 +112,10 @@ The installer is written to `target/release/bundle/nsis/`.
 
 Try the interface without waiting for real data: `powercost.exe --sim`, or in a browser `npm run dev` inside `ui/` (it serves data exported by `cargo run -p export-mock -- ui/public/mock`).
 
+### Trying it as a brand-new user
+
+Double-click `scripts/fresh-pc-test.wsb` (needs the Windows Sandbox feature: Windows 10/11 Pro, Enterprise or Education, turned on under "Turn Windows features on or off", then a restart). It opens a clean, throw-away Windows with the download website open. Nothing is shared with your PC, and everything is deleted when you close the window. To test the update path, install the older release from the releases page and use Settings → Updates.
+
 ## Project layout
 
 | Crate | Role |
