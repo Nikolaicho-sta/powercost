@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PowerCost - what your PC costs in electricity</title>
+<meta name="description" content="PowerCost is a free Windows app that estimates what your PC costs in electricity, by power state and tariff period. Local-first, no account, no telemetry.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%232a78d6'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #898781;
+  --grid: #e1e0d9; --ring: rgba(11,11,11,.1); --wash: rgba(11,11,11,.05);
+  --accent: #2a78d6; --accent-ink: #fff; --warn-bg: #fff3d6; --warn-ink: #5a3d00;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink-2: #c3c2b7; --ink-3: #898781;
+    --grid: #2c2c2a; --ring: rgba(255,255,255,.1); --wash: rgba(255,255,255,.07);
+    --accent: #3987e5; --accent-ink: #0b0b0b; --warn-bg: #3a2c08; --warn-ink: #f6d98a;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 16px/1.6 system-ui, "Segoe UI", sans-serif; }
+a { color: var(--accent); }
+.wrap { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+header.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+header.top b { font-size: 18px; }
+header.top nav a { color: var(--ink-2); text-decoration: none; margin-left: 18px; font-size: 14px; }
+header.top nav a:hover { color: var(--ink); }
+.hero { padding: 36px 0 28px; text-align: center; }
+.hero h1 { font-size: clamp(30px, 6vw, 48px); line-height: 1.1; margin: 0 0 14px; letter-spacing: -.02em; }
+.hero p.lead { font-size: 18px; color: var(--ink-2); max-width: 640px; margin: 0 auto 26px; }
+.btn { display: inline-block; background: var(--accent); color: var(--accent-ink); text-decoration: none; font-weight: 600; padding: 13px 26px; border-radius: 10px; font-size: 17px; }
+.btn:hover { filter: brightness(1.08); }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ring); font-weight: 500; font-size: 15px; padding: 11px 20px; margin-left: 8px; }
+.meta { margin-top: 14px; font-size: 13px; color: var(--ink-3); }
+.shot { margin: 18px auto 0; max-width: 760px; border-radius: 14px; border: 1px solid var(--ring); overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,.18); }
+.shot img { display: block; width: 100%; height: auto; }
+section { padding: 34px 0; }
+section h2 { font-size: 26px; margin: 0 0 6px; letter-spacing: -.01em; }
+section > p.sub { color: var(--ink-2); margin: 0 0 20px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--ring); border-radius: 12px; padding: 18px; }
+.card h3 { margin: 0 0 6px; font-size: 16px; }
+.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.notice { background: var(--warn-bg); color: var(--warn-ink); border-radius: 12px; padding: 16px 18px; }
+.notice h3 { margin: 0 0 6px; font-size: 16px; }
+.notice ul { margin: 6px 0 0; padding-left: 20px; }
+ol.steps { padding-left: 20px; }
+ol.steps li { margin-bottom: 8px; }
+code { background: var(--wash); padding: 2px 6px; border-radius: 5px; font-size: 13px; word-break: break-all; }
+table { border-collapse: collapse; width: 100%; font-size: 15px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+th { color: var(--ink-3); font-weight: 500; font-size: 13px; }
+footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40px; color: var(--ink-3); font-size: 14px; }
+@media (max-width: 520px) { .btn.ghost { margin: 10px 0 0; } header.top nav a { margin-left: 12px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <b>⚡ PowerCost</b>
+    <nav><a href="#features">Features</a><a href="#accuracy">Accuracy</a><a href="#install">Install</a><a href="#privacy">Privacy</a></nav>
+  </header>
+
+  <main>
+    <div class="hero">
+      <h1>What does your PC cost in electricity?</h1>
+      <p class="lead">PowerCost sits in the Windows system tray and estimates your PC's electricity cost, split by what it was doing (active, idle, sleep, off) and by tariff period (day and night), using the prices of your region.</p>
+      <a class="btn" href="https://github.com/Nikolaicho-sta/powercost/releases/download/v0.1.0/PowerCost_0.1.0_x64-setup.exe">Download for Windows</a>
+      <a class="btn ghost" href="https://github.com/Nikolaicho-sta/powercost">View the source</a>
+      <p class="meta">Version 0.1.0 · Windows 10 / 11, 64-bit · 3.4 MB · free · no account</p>
+      <div class="shot"><img src="img/dashboard.png" width="846" height="955" alt="The PowerCost dashboard: today's estimated cost, a cost-over-time chart, breakdowns by power state and tariff period, and what-if scenarios"></div>
+    </div>
+
+    <section id="features">
+      <h2>What it does</h2>
+      <p class="sub">Everything runs on your PC.</p>
+      <div class="grid">
+        <div class="card"><h3>Costs by power state</h3><p>Tracks active, idle, sleep and off time. While the PC is off the app cannot run, so it explains the gap afterwards from the Windows event log.</p></div>
+        <div class="card"><h3>Real tariffs, as data</h3><p>Day/night prices, weekends, holidays, seasons, VAT and clock changes come from editable tariff files. Bulgarian presets are included; add any country with a JSON file.</p></div>
+        <div class="card"><h3>Dashboard and history</h3><p>Today, week, month and year, with arrows to step back through earlier periods, a timeline, and "what if" scenarios such as shutting down at night.</p></div>
+        <div class="card"><h3>Stopwatch</h3><p>Press Start, play a game or render a video, press Stop, and see the energy and cost of exactly that time.</p></div>
+        <div class="card"><h3>Budget alerts</h3><p>Set a monthly budget and get ordinary Windows notifications when you pass 80 % or 100 % of it.</p></div>
+        <div class="card"><h3>Light on resources</h3><p>The tray tracker uses about 25 MB of memory and roughly 0.01 % of one CPU core. Closing the window keeps it tracking.</p></div>
+      </div>
+    </section>
+
+    <section id="accuracy">
+      <h2>Honest numbers</h2>
+      <p class="sub">PowerCost cannot read your wall socket. Every figure is an estimate and the app always shows how it was obtained.</p>
+      <table>
+        <thead><tr><th>Method</th><th>How</th><th>Typical error</th></tr></thead>
+        <tbody>
+          <tr><td><b>Calibrated</b></td><td>You measure idle and full-load watts once with a plug-in wattmeter (10 minutes).</td><td>about ±5 %</td></tr>
+          <tr><td><b>Measured sensors</b></td><td>CPU power from Windows counters and NVIDIA GPU power, plus a modelled rest of system.</td><td>about ±15 %</td></tr>
+          <tr><td><b>Default model</b></td><td>Estimated from your hardware when no sensor is available.</td><td>about ±30 %</td></tr>
+        </tbody>
+      </table>
+      <p class="sub" style="margin-top:14px">Treat the cost as the right order of magnitude, not an audited bill. CPU readings depend on your hardware, GPU power is read for NVIDIA cards only, and tariff presets can be out of date: if your bill disagrees, believe your bill and correct the tariff. <a href="https://github.com/Nikolaicho-sta/powercost#accuracy-and-limitations">Read the full list of limitations.</a></p>
+    </section>
+
+    <section id="install">
+      <h2>Install</h2>
+      <ol class="steps">
+        <li>Download <a href="https://github.com/Nikolaicho-sta/powercost/releases/download/v0.1.0/PowerCost_0.1.0_x64-setup.exe"><code>PowerCost_0.1.0_x64-setup.exe</code></a> and run it. It installs for your user only and needs no administrator rights.</li>
+        <li>Follow the short setup wizard: region, tariff, laptop or desktop.</li>
+        <li>Closing the window does not quit the app. It keeps tracking from the tray; use the tray icon's menu, <i>Quit PowerCost</i>, to stop it.</li>
+      </ol>
+      <div class="notice">
+        <h3>Windows may warn you</h3>
+        <p style="margin:0">The installer is not code-signed yet, so Windows SmartScreen may show "Windows protected your PC". Click <b>More info</b>, then <b>Run anyway</b>. You can check the download is intact:</p>
+        <ul>
+          <li>SHA-256: <code>5d8fd897171b1d3baba6dba4fb63710595681392a9651437885197b179372f08</code></li>
+          <li>PowerShell: <code>Get-FileHash .\PowerCost_0.1.0_x64-setup.exe</code></li>
+        </ul>
+      </div>
+      <p class="sub" style="margin-top:14px"><b>Requirements:</b> Windows 10 or 11 (64-bit). The Microsoft Edge WebView2 runtime is built into Windows 11; on Windows 10 the installer fetches it if it is missing. <b>Updating:</b> download and run the newest installer; your data in <code>%APPDATA%\PowerCost</code> is kept. <b>Uninstall:</b> Windows Settings, Apps. There is no Linux or macOS version yet.</p>
+    </section>
+
+    <section id="privacy">
+      <h2>Private by design</h2>
+      <div class="grid">
+        <div class="card"><h3>Stays on your PC</h3><p>All data lives in <code>%APPDATA%\PowerCost</code>. Nothing is uploaded: no account, no analytics, no crash reporting.</p></div>
+        <div class="card"><h3>No network use</h3><p>The only possible network call is an optional country lookup in the setup wizard, off by default. Tariff prices are never downloaded.</p></div>
+        <div class="card"><h3>Open source</h3><p>The full code and a plain-language <a href="https://github.com/Nikolaicho-sta/powercost/blob/main/docs/PRIVACY.md">privacy page</a> are on GitHub, along with the <a href="https://github.com/Nikolaicho-sta/powercost/blob/main/docs/DECISIONS.md">reasoning behind each design choice</a>.</p></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    PowerCost is an estimate tool, not a metering device. <a href="https://github.com/Nikolaicho-sta/powercost">Source</a> · <a href="https://github.com/Nikolaicho-sta/powercost/releases">All releases</a> · <a href="https://github.com/Nikolaicho-sta/powercost/issues">Report a problem</a>
+  </footer>
+</div>
+</body>
+</html>
