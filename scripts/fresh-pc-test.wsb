@@ -13,6 +13,6 @@
   <ClipboardRedirection>Enable</ClipboardRedirection>
   <MemoryInMB>4096</MemoryInMB>
   <LogonCommand>
-    <Command>explorer.exe https://power-cost.vercel.app</Command>
+    <Command>"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe" https://power-cost.vercel.app</Command>
   </LogonCommand>
 </Configuration>
