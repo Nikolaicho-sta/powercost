@@ -29,7 +29,7 @@ export function useStartUpdate() {
 function whatHappens(mode: Mode) {
   return mode === "github"
     ? "PowerCost will download the new installer from GitHub (about 4 MB), check its checksum, close, install it and start again. Your data is kept; tracking pauses for a few seconds."
-    : "PowerCost will close, rebuild (a few minutes; a window shows the progress) and start again. Your data is kept; tracking pauses while it is closed.";
+    : "PowerCost will rebuild (usually under a minute; a window shows the progress), then close for a few seconds to install and start again. Your data is kept.";
 }
 
 export function UpdateButtons({ u, mode, canUpdate, extra }: { u: ReturnType<typeof useStartUpdate>; mode: Mode; canUpdate: boolean; extra?: React.ReactNode }) {

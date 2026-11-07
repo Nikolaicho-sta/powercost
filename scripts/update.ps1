@@ -21,6 +21,8 @@
 .PARAMETER DryRun      Show the window and the steps without building, quitting or installing.
 .PARAMETER NoGui       Print to the console instead of showing the progress window.
 .PARAMETER Optimized   Build with the release profile (slower; identical to the published installer).
+.PARAMETER Installer   Build and run the real installer instead of replacing the program file (a first
+                       install does this automatically).
 .PARAMETER WaitSeconds How long to wait for you to quit an old copy by hand (default 90).
 .PARAMETER InstallDir  Where to install (default: %LOCALAPPDATA%\PowerCost).
 #>
@@ -30,6 +32,7 @@ param(
     [switch]$DryRun,
     [switch]$NoGui,
     [switch]$Optimized,
+    [switch]$Installer,
     [int]$WaitSeconds = 90,
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'PowerCost')
 )
@@ -90,8 +93,13 @@ try {
             }
         }
     }
+    # Normal update = replace the program file of an existing install: no Tauri CLI start-up, no
+    # packaging of an installer (those took ~20 s of a ~25 s update). A first install, or -Installer,
+    # builds and runs the real installer instead.
+    $fast = (-not $Installer) -and (Test-Path $installedExe) -and (Test-Path (Join-Path $InstallDir 'uninstall.exe'))
+    $newExe = Join-Path $targetDir 'release\powercost.exe'
     if ($DryRun) {
-        Note '(dry run) would run: npm run build, then tauri build'
+        Note ("(dry run) would run: npm run build (if the interface changed), then " + $(if ($fast) { 'cargo build' } else { 'tauri build (installer)' }))
         foreach ($p in 10, 40, 70, 85) { Ui-Progress $p; Ui-Status "Pretending to build ($p%)"; Start-Sleep -Milliseconds 350 }
     } else {
         $ui = Join-Path $root 'ui'
@@ -99,21 +107,39 @@ try {
             Ui-Status 'Installing the interface packages (first time only)'
             if ((Invoke-Logged 'npm install --no-audit --no-fund' $ui $onChunk) -ne 0) { throw 'npm install failed' }
         }
-        Ui-Status 'Building the interface'; Ui-Progress 3
-        if ((Invoke-Logged 'npm run build' $ui $onChunk) -ne 0) { throw 'the interface build failed' }
-        Ui-Status 'Compiling PowerCost (the first build is slow, later ones are quick)'; Ui-Progress 6
-        $tauri = Join-Path $root 'ui\node_modules\.bin\tauri.cmd'
-        if ((Invoke-Logged ('"' + $tauri + '" build') (Join-Path $root 'crates\app') $onChunk) -ne 0) { throw 'the installer build failed' }
+        # Rebuild the interface only if its sources are newer than the last build.
+        $dist = Join-Path $ui 'dist\index.html'
+        $inputs = @(Get-ChildItem (Join-Path $ui 'src') -Recurse -File) + @(Get-ChildItem $ui -File | Where-Object { $_.Name -match '^(index\.html|package(-lock)?\.json|vite\.config\..*|tsconfig.*\.json)$' })
+        $newest = ($inputs | Measure-Object LastWriteTime -Maximum).Maximum
+        if ((Test-Path $dist) -and $newest -le (Get-Item $dist).LastWriteTime) {
+            Note 'interface is unchanged since the last build'
+        } else {
+            Ui-Status 'Building the interface'; Ui-Progress 3
+            if ((Invoke-Logged 'npm run build' $ui $onChunk) -ne 0) { throw 'the interface build failed' }
+        }
+        Ui-Status 'Compiling PowerCost (the first build is slow, later ones are quick)'; Ui-Progress 8
+        if ($fast) {
+            # custom-protocol = the interface is embedded in the program (what `tauri build` also does)
+            if ((Invoke-Logged 'cargo build --release -p powercost --features tauri/custom-protocol' $root $onChunk) -ne 0) { throw 'the build failed' }
+            if (-not (Test-Path $newExe)) { throw "the program was not produced: $newExe" }
+            Note ("program: {0} ({1} MB, built {2})" -f $newExe, [math]::Round((Get-Item $newExe).Length / 1MB, 2), (Get-Item $newExe).LastWriteTime)
+        } else {
+            $tauri = Join-Path $root 'ui\node_modules\.bin\tauri.cmd'
+            if ((Invoke-Logged ('"' + $tauri + '" build') (Join-Path $root 'crates\app') $onChunk) -ne 0) { throw 'the installer build failed' }
+        }
     }
-    $setup = Get-ChildItem $nsisDir -Filter '*_x64-setup.exe' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-    if (-not $setup -and -not $DryRun) { throw 'the installer was not produced' }
-    if ($setup) { Note ("installer: {0} ({1} MB, built {2})" -f $setup.FullName, [math]::Round($setup.Length / 1MB, 2), $setup.LastWriteTime) }
+    $setup = $null
+    if (-not $fast) {
+        $setup = Get-ChildItem $nsisDir -Filter '*_x64-setup.exe' -ErrorAction SilentlyContinue | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if (-not $setup -and -not $DryRun) { throw 'the installer was not produced' }
+        if ($setup) { Note ("installer: {0} ({1} MB, built {2})" -f $setup.FullName, [math]::Round($setup.Length / 1MB, 2), $setup.LastWriteTime) }
+    }
     Ui-Step 0 'done'
     Ui-Progress 85
     Note ("build took {0:N0} s" -f $clock.Elapsed.TotalSeconds)
 
     if ($NoInstall) {
-        Ui-Finish $true 'Built. The installer is ready (nothing was installed).' $logFile
+        Ui-Finish $true 'Built (nothing was installed).' $logFile
         exit 0
     }
 
@@ -149,8 +175,26 @@ try {
     Ui-Step 2 'active'
     Ui-Status "Installing to $InstallDir (your data in %APPDATA%\PowerCost is kept)"
     if ($DryRun) {
-        Note "(dry run) would run the installer silently with /S /D=$InstallDir"
+        Note ("(dry run) would " + $(if ($fast) { "replace $installedExe with the new program (the old one is kept until it works)" } else { "run the installer silently with /S /D=$InstallDir" }))
         Start-Sleep -Milliseconds 500
+    } elseif ($fast) {
+        # Replace only the program file. The old one is set aside first and restored if the copy fails.
+        $old = "$installedExe.old"
+        Remove-Item -LiteralPath $old -ErrorAction SilentlyContinue
+        # Windows or antivirus can hold the file for a moment after the program exits: retry briefly.
+        for ($try = 1; $try -le 20; $try++) {
+            try { Move-Item -LiteralPath $installedExe -Destination $old -Force -ErrorAction Stop; break }
+            catch { if ($try -eq 20) { throw "the installed program is locked: $($_.Exception.Message)" }; Ui-Pump; Start-Sleep -Milliseconds 300 }
+        }
+        try {
+            Copy-Item -LiteralPath $newExe -Destination $installedExe -Force
+            if ((Get-Item $installedExe).Length -ne (Get-Item $newExe).Length) { throw 'the copied program has the wrong size' }
+        } catch {
+            Remove-Item -LiteralPath $installedExe -ErrorAction SilentlyContinue
+            Move-Item -LiteralPath $old -Destination $installedExe -Force
+            throw "could not replace the program (the old version was restored): $($_.Exception.Message)"
+        }
+        Note ("replaced: {0} ({1})" -f $installedExe, (Get-Item $installedExe).LastWriteTime)
     } else {
         # An explicit folder is always used: an old test install may be registered elsewhere.
         $p = Start-Process -FilePath $setup.FullName -ArgumentList '/S', "/D=$InstallDir" -PassThru
@@ -173,6 +217,7 @@ try {
         Start-Process -FilePath $installedExe
         Note "started; Settings (bottom of the page) shows the build label: $label"
     }
+    Remove-Item -LiteralPath "$installedExe.old" -ErrorAction SilentlyContinue
     Ui-Step 3 'done'
     Note ("update took {0:N0} s" -f $clock.Elapsed.TotalSeconds)
     Ui-Finish $true "PowerCost is updated ($label). It took $([int]$clock.Elapsed.TotalSeconds) s." $logFile

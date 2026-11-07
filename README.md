@@ -37,14 +37,16 @@ Download `PowerCost_<version>_x64-setup.exe` from the build output (see [Build](
 
 **Without the app:** when this project folder has newer code, **double-click `Update PowerCost.vbs`** (no console at all; `Update PowerCost.cmd` does the same but flashes a console for an instant) or run `scripts\update.ps1`. Either way it:
 
-1. builds the interface and the installer while PowerCost keeps running and tracking,
+1. builds the interface (only if it changed) and the program while PowerCost keeps running and tracking,
 2. asks the running PowerCost to quit cleanly (it saves its last minute; nothing is force-killed),
-3. installs over the existing install into `%LOCALAPPDATA%\PowerCost` (your data and settings are kept),
+3. replaces the program file of the existing install in `%LOCALAPPDATA%\PowerCost` (your data and settings are kept; the old file is restored if the copy fails),
 4. starts PowerCost again.
+
+A normal update takes about 5 seconds when only Rust code changed and about 20 seconds when the interface changed. A first install, or `-Installer`, builds and runs the real NSIS installer instead (slower, and it also refreshes the uninstall entry).
 
 A small progress window shows the steps and "compiling 301 of 556"; "Show details" shows the build output. Tracking only pauses for the few seconds of steps 2 to 4.
 
-For speed, this build uses quicker compiler settings than the published installer (no link-time optimisation, incremental, in its own folder `target\update`), so the first build there is slow and later ones only recompile what changed. `-Optimized` uses the exact release settings instead. Options: `-NoInstall` (build only), `-NoLaunch`, `-DryRun` (show the window and steps, change nothing), `-NoGui` (console output instead of the window), `-Optimized`, `-InstallDir <folder>`. A log of the last run is written to `update.log`.
+For speed, this build uses quicker compiler settings than the published installer (no link-time optimisation, incremental, in its own folder `target\update`), so the first build there is slow and later ones only recompile what changed. `-Optimized` uses the exact release settings instead. Options: `-NoInstall` (build only), `-NoLaunch`, `-DryRun` (show the window and steps, change nothing), `-NoGui` (console output instead of the window), `-Optimized`, `-Installer`, `-InstallDir <folder>`. A log of the last run is written to `update.log`.
 
 If the running copy is an older version that cannot be told to quit, the script asks you to use the tray icon's **Quit PowerCost** and waits. Settings, at the bottom of the page, shows which build you are running (for example `M9 1a2b3c4`).
 
