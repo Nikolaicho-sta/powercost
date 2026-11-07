@@ -11,7 +11,7 @@ PowerCost is a small Windows program that sits in the system tray and **estimate
 * Tracks time in each power state and estimates watts in each. While the PC is off or asleep the app cannot run, so it records a heartbeat and afterwards classifies the gap (sleep, hibernate, shutdown, restart, crash) from the Windows event log.
 * Estimates power in layers and tells you which one was used: measured CPU/GPU sensors, your own wall-meter calibration, or a default model from your hardware.
 * Prices every minute with the tariff in force at that local time: weekdays, weekends, holidays, seasons, VAT, network fees and clock changes are all handled from tariff *data*, never hard-coded.
-* Dashboard (today, week, month, year): cost and kWh, breakdown by state and by tariff period, a timeline, and "what if" scenarios (shut down at night; move heavy use to the cheap period).
+* Dashboard (today, week, month, year) with ◀ ▶ buttons (and the left/right arrow keys) to step back to earlier days, weeks, months and years: cost and kWh, breakdown by state and by tariff period, a timeline, and "what if" scenarios (shut down at night; move heavy use to the cheap period).
 * **Stopwatch (Хронометър):** press Start, use the PC, press Stop, and see the energy, cost, average watts and power-state breakdown of exactly that time. It keeps running if you close the window or restart the app.
 * Tray tooltip with today's cost and the current watts; monthly budget alerts as Windows notifications.
 * Full tariff editor, first-run wizard, calibration wizard, CSV/JSON export, optional start with Windows, light/dark theme.

@@ -108,3 +108,31 @@ export function energy(nano: number): string {
   const digits = wh >= 10 ? 1 : 2;
   return `${wh.toLocaleString(undefined, { minimumFractionDigits: digits, maximumFractionDigits: digits })} Wh`;
 }
+
+function localDate(iso: string): Date {
+  const [y, m, d] = iso.split("-").map(Number);
+  return new Date(y, m - 1, d);
+}
+
+/** Heading for a period: "Friday, 6 November 2026", "26 Oct - 1 Nov 2026", "November 2026", "2026". */
+export function periodTitle(kind: "today" | "week" | "month" | "year", startIso: string, endIso: string, locale?: string): string {
+  const s = localDate(startIso);
+  const e = localDate(endIso);
+  const f = (o: Intl.DateTimeFormatOptions, d: Date) => new Intl.DateTimeFormat(locale, o).format(d);
+  switch (kind) {
+    case "today":
+      return f({ weekday: "long", day: "numeric", month: "long", year: "numeric" }, s);
+    case "week": {
+      const sameYear = s.getFullYear() === e.getFullYear();
+      const left = f(sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" }, s);
+      return `${left} - ${f({ day: "numeric", month: "short", year: "numeric" }, e)}`;
+    }
+    case "month":
+      return f({ month: "long", year: "numeric" }, s);
+    case "year":
+      return f({ year: "numeric" }, s);
+  }
+}
+
+/** Words for the buttons: "previous day", "next week", ... */
+export const PERIOD_UNIT: Record<"today" | "week" | "month" | "year", string> = { today: "day", week: "week", month: "month", year: "year" };

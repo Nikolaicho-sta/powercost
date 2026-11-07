@@ -1,5 +1,5 @@
 import type { Dashboard, PeriodKind } from "../api";
-import { hours, kwh, money, percent } from "../format";
+import { hours, kwh, money, percent, periodTitle } from "../format";
 import { InfoTip } from "./InfoTip";
 
 const LABEL: Record<PeriodKind, string> = { today: "Today so far", week: "This week", month: "This month", year: "This year" };
@@ -22,7 +22,7 @@ export function Hero({ d }: { d: Dashboard }) {
   return (
     <section className="card span-8" aria-labelledby="hero">
       <div className="hero-label" id="hero">
-        Estimated cost - {LABEL[d.period]}
+        Estimated cost - {d.offset < 0 ? periodTitle(d.period, d.period_start, d.period_end_inclusive) : LABEL[d.period]}
         <InfoTip text="Every figure is an estimate. Energy = estimated wall watts x time, priced per minute with the active tariff. The bar below shows how that wattage was obtained." />
       </div>
       <div className="hero-value">≈ {money(d.grand_total_minor, d.currency, d.minor_digits)}</div>

@@ -1,0 +1,415 @@
+{
+  "period": "week",
+  "from": "2026-10-11T21:00:00Z",
+  "to": "2026-10-18T21:00:00Z",
+  "currency": "EUR",
+  "minor_digits": 2,
+  "tariff_name": "Electrohold (Electrohold Prodazhbi) - household, two-zone, regulated",
+  "total": {
+    "seconds": 604800,
+    "kwh_nano": 5735573606,
+    "cost_nano": 810436228,
+    "cost_minor": 81
+  },
+  "by_state": [
+    {
+      "state": "active",
+      "amount": {
+        "seconds": 300600,
+        "kwh_nano": 4720951148,
+        "cost_nano": 677589692,
+        "cost_minor": 68
+      }
+    },
+    {
+      "state": "idle",
+      "amount": {
+        "seconds": 69660,
+        "kwh_nano": 532110165,
+        "cost_nano": 82076921,
+        "cost_minor": 8
+      }
+    },
+    {
+      "state": "sleep",
+      "amount": {
+        "seconds": 71160,
+        "kwh_nano": 437128052,
+        "cost_nano": 46075362,
+        "cost_minor": 5
+      }
+    },
+    {
+      "state": "off",
+      "amount": {
+        "seconds": 163380,
+        "kwh_nano": 45384241,
+        "cost_nano": 4694253,
+        "cost_minor": 0
+      }
+    }
+  ],
+  "by_period": [
+    {
+      "id": "day",
+      "label": "Day",
+      "amount": {
+        "seconds": 403200,
+        "kwh_nano": 5133382240,
+        "cost_nano": 755082759,
+        "cost_minor": 76
+      }
+    },
+    {
+      "id": "night",
+      "label": "Night",
+      "amount": {
+        "seconds": 201600,
+        "kwh_nano": 602191366,
+        "cost_nano": 55353469,
+        "cost_minor": 6
+      }
+    }
+  ],
+  "bucket": "day",
+  "timeline": [
+    {
+      "start": "2026-10-11T21:00:00Z",
+      "local_start": "2026-10-12T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 45000,
+            "kwh_nano": 545268815,
+            "cost_nano": 75520509,
+            "cost_minor": 8
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 9420,
+            "kwh_nano": 72055167,
+            "cost_nano": 11114362,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 31980,
+            "kwh_nano": 8883511,
+            "cost_nano": 902793,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 626207493,
+        "cost_nano": 87537664,
+        "cost_minor": 9
+      }
+    },
+    {
+      "start": "2026-10-12T21:00:00Z",
+      "local_start": "2026-10-13T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 45000,
+            "kwh_nano": 551366182,
+            "cost_nano": 76442025,
+            "cost_minor": 8
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 9180,
+            "kwh_nano": 69959003,
+            "cost_nano": 10791035,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "sleep",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 10985010,
+            "cost_nano": 1009740,
+            "cost_minor": 0
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 30420,
+            "kwh_nano": 8450169,
+            "cost_nano": 867117,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 640760364,
+        "cost_nano": 89109917,
+        "cost_minor": 9
+      }
+    },
+    {
+      "start": "2026-10-13T21:00:00Z",
+      "local_start": "2026-10-14T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 45000,
+            "kwh_nano": 830706661,
+            "cost_nano": 117507980,
+            "cost_minor": 12
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 10440,
+            "kwh_nano": 79370829,
+            "cost_nano": 12242785,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "sleep",
+          "amount": {
+            "seconds": 29160,
+            "kwh_nano": 179181162,
+            "cost_nano": 17993082,
+            "cost_minor": 2
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 500010,
+            "cost_nano": 45960,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 1089758662,
+        "cost_nano": 147789807,
+        "cost_minor": 15
+      }
+    },
+    {
+      "start": "2026-10-14T21:00:00Z",
+      "local_start": "2026-10-15T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 45000,
+            "kwh_nano": 826042167,
+            "cost_nano": 117216835,
+            "cost_minor": 12
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 9420,
+            "kwh_nano": 72143993,
+            "cost_nano": 11128072,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 31980,
+            "kwh_nano": 8883511,
+            "cost_nano": 902793,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 907069671,
+        "cost_nano": 129247700,
+        "cost_minor": 13
+      }
+    },
+    {
+      "start": "2026-10-15T21:00:00Z",
+      "local_start": "2026-10-16T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 45000,
+            "kwh_nano": 550810495,
+            "cost_nano": 76594433,
+            "cost_minor": 8
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 9900,
+            "kwh_nano": 75725164,
+            "cost_nano": 11680461,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "sleep",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 11000010,
+            "cost_nano": 1011120,
+            "cost_minor": 0
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 29700,
+            "kwh_nano": 8250165,
+            "cost_nano": 836265,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 645785834,
+        "cost_nano": 90122279,
+        "cost_minor": 9
+      }
+    },
+    {
+      "start": "2026-10-16T21:00:00Z",
+      "local_start": "2026-10-17T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 37800,
+            "kwh_nano": 386145499,
+            "cost_nano": 58403030,
+            "cost_minor": 6
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 10200,
+            "kwh_nano": 78113005,
+            "cost_nano": 12048766,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "sleep",
+          "amount": {
+            "seconds": 36600,
+            "kwh_nano": 225041870,
+            "cost_nano": 25057650,
+            "cost_minor": 3
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 500010,
+            "cost_nano": 45960,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 689800384,
+        "cost_nano": 95555406,
+        "cost_minor": 10
+      }
+    },
+    {
+      "start": "2026-10-17T21:00:00Z",
+      "local_start": "2026-10-18T00:00:00",
+      "future": false,
+      "by_state": [
+        {
+          "state": "active",
+          "amount": {
+            "seconds": 37800,
+            "kwh_nano": 1030611329,
+            "cost_nano": 155904880,
+            "cost_minor": 16
+          }
+        },
+        {
+          "state": "idle",
+          "amount": {
+            "seconds": 11100,
+            "kwh_nano": 84743004,
+            "cost_nano": 13071440,
+            "cost_minor": 1
+          }
+        },
+        {
+          "state": "sleep",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 10920000,
+            "cost_nano": 1003770,
+            "cost_minor": 0
+          }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 35700,
+            "kwh_nano": 9916865,
+            "cost_nano": 1093365,
+            "cost_minor": 0
+          }
+        }
+      ],
+      "total": {
+        "seconds": 86400,
+        "kwh_nano": 1136191198,
+        "cost_nano": 171073455,
+        "cost_minor": 17
+      }
+    }
+  ],
+  "confidence": {
+    "measured_sensors_permille": 839,
+    "calibrated_permille": 0,
+    "default_model_permille": 161
+  },
+  "warnings": [],
+  "current": null,
+  "fixed_fees": null,
+  "grand_total_minor": 81,
+  "offset": -3,
+  "period_start": "2026-10-12",
+  "period_end_inclusive": "2026-10-18",
+  "has_earlier": true
+}

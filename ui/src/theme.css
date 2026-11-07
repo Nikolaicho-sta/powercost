@@ -255,3 +255,10 @@ code { background: var(--wash); border-radius: 4px; padding: 0 4px; font-size: 1
 @media (max-width: 640px) { .tiles { grid-template-columns: 1fr; } .sw-face { font-size: 44px; } }
 .tile { border: 1px solid var(--grid); border-radius: 12px; padding: 12px; }
 .tile .v { font-size: 28px; font-weight: 650; letter-spacing: -0.01em; margin: 2px 0; }
+
+/* ---------- period navigation ---------- */
+.period-nav { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; flex-wrap: wrap; }
+.period-nav .period-title { font-size: 16px; font-weight: 650; min-width: 220px; text-align: center; }
+.period-nav .icon-btn { min-width: 36px; font-size: 14px; }
+.period-nav .icon-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.period-nav .icon-btn:focus-visible { outline: 2px solid var(--s-active); outline-offset: 2px; }

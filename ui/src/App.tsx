@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, type AppInfo, type Dashboard, type PeriodKind, type Settings, type Theme } from "./api";
+import { PERIOD_UNIT, periodTitle } from "./format";
 import { BudgetMeter } from "./components/BudgetMeter";
 import { PeriodBreakdown, StateBreakdown } from "./components/Breakdown";
 import { CalibrationWizard } from "./components/Calibration";
@@ -23,7 +24,8 @@ function applyTheme(theme: Theme) {
 
 export function App() {
   const [view, setView] = useState<View>("dashboard");
-  const [period, setPeriod] = useState<PeriodKind>("today");
+  const [period, setPeriodState] = useState<PeriodKind>("today");
+  const [offset, setOffset] = useState(0); // 0 = current period, -1 = the one before, ...
   const [data, setData] = useState<Dashboard | null>(null);
   const [month, setMonth] = useState<Dashboard | null>(null);
   const [info, setInfo] = useState<AppInfo | null>(null);
@@ -31,17 +33,42 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [calibrating, setCalibrating] = useState(false);
 
+  // Switching between Today/Week/Month/Year always returns to the current period.
+  const setPeriod = (p: PeriodKind) => {
+    setPeriodState(p);
+    setOffset(0);
+  };
+
   const load = useCallback(() => {
-    api.dashboard(period).then((d) => (setData(d), setError(null))).catch((e) => setError(String(e)));
+    api.dashboard(period, offset).then((d) => (setData(d), setError(null))).catch((e) => setError(String(e)));
     if (settings?.budget) api.dashboard("month").then(setMonth).catch(() => undefined);
-  }, [period, settings?.budget]);
+  }, [period, offset, settings?.budget]);
 
   useEffect(() => {
     if (view !== "dashboard") return;
     load();
+    if (offset !== 0) return; // earlier periods do not change
     const t = setInterval(load, 30_000);
     return () => clearInterval(t);
-  }, [load, view]);
+  }, [load, view, offset]);
+
+  const canGoBack = !!data && data.has_earlier;
+  const canGoForward = offset < 0;
+  const goBack = useCallback(() => setOffset((o) => o - 1), []);
+  const goForward = useCallback(() => setOffset((o) => Math.min(0, o + 1)), []);
+
+  // Left/Right arrow keys step through periods (not while typing or while a dialog is open).
+  useEffect(() => {
+    if (view !== "dashboard") return;
+    const onKey = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (e.altKey || e.ctrlKey || e.metaKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)) || document.querySelector(".modal-back")) return;
+      if (e.key === "ArrowLeft" && canGoBack) goBack();
+      if (e.key === "ArrowRight" && canGoForward) goForward();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [view, canGoBack, canGoForward, goBack, goForward]);
 
   useEffect(() => {
     api.info().then(setInfo).catch(() => undefined);
@@ -103,6 +130,26 @@ export function App() {
         <div className="banner" role="status">
           <strong>Limited sensors:</strong> {info.sensor_issues.join(" · ")}
         </div>
+      )}
+
+      {view === "dashboard" && data && (
+        <nav className="period-nav" aria-label={`Browse ${PERIOD_UNIT[period]}s`}>
+          <button type="button" className="icon-btn" disabled={!canGoBack} onClick={goBack} aria-label={`Previous ${PERIOD_UNIT[period]}`} title={`Previous ${PERIOD_UNIT[period]} (left arrow key)`}>
+            ◀
+          </button>
+          <div className="period-title" aria-live="polite">
+            {periodTitle(data.period, data.period_start, data.period_end_inclusive)}
+            {data.offset === 0 && <span className="muted"> · now</span>}
+          </div>
+          <button type="button" className="icon-btn" disabled={!canGoForward} onClick={goForward} aria-label={`Next ${PERIOD_UNIT[period]}`} title={`Next ${PERIOD_UNIT[period]} (right arrow key)`}>
+            ▶
+          </button>
+          {offset !== 0 && (
+            <button type="button" className="btn" onClick={() => setOffset(0)}>
+              Back to {period === "today" ? "today" : `this ${PERIOD_UNIT[period]}`}
+            </button>
+          )}
+        </nav>
       )}
 
       {view === "dashboard" &&

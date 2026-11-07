@@ -118,3 +118,5 @@ A measurement of an arbitrary interval. Exact to the second: stored spans are cl
 
 ## D40 - Data folder lookup ignores empty variables
 An empty `APPDATA` made the data folder a relative path in the current directory. Empty values are now treated as unset. Found when a test launch ran with a cleared variable.
+## D41 - Browsing earlier periods
+The dashboard takes an `offset` (0 = the current period, -1 = the one before, ...); the same command serves every period kind. Offsets are whole periods in LOCAL time: yesterday, last Monday-to-Sunday week, last calendar month, last year. A month is shifted from the first of the month so "one month back from 31 March" cannot overflow. Earlier periods are complete (no "upcoming" buckets), have no live "now" reading, and are not re-fetched every 30 seconds. Positive offsets (the future) are treated as 0. `has_earlier` (any data, minute rows, compacted hours or spans, before the period) tells the UI when to disable the back button. Compacted days are served from the aggregates and give the same figures as before compaction (tested). Switching between Today/Week/Month/Year always returns to the current period.

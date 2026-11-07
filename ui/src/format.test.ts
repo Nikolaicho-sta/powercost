@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bucketLabel, bucketTitle, clock, duration, energy, hours, kwh, niceTicks, percent, share } from "./format";
+import { bucketLabel, bucketTitle, clock, duration, energy, hours, kwh, niceTicks, percent, periodTitle, share } from "./format";
 
 describe("niceTicks", () => {
   it("rounds up to clean steps starting at zero", () => {
@@ -55,5 +55,17 @@ describe("energy for short measurements", () => {
     expect(energy(45_000_000)).toMatch(/45[.,]0 Wh/);
     expect(energy(0)).toMatch(/0[.,]00 Wh/);
     expect(energy(1_234_000_000)).toMatch(/1[.,]23 kWh/);
+  });
+});
+
+describe("period titles for navigation", () => {
+  it("names a day, a week, a month and a year", () => {
+    expect(periodTitle("today", "2026-11-05", "2026-11-05", "en-GB")).toMatch(/Thursday.*5.*November.*2026/);
+    expect(periodTitle("week", "2026-10-26", "2026-11-01", "en-GB")).toMatch(/26 Oct - 1 Nov 2026/);
+    expect(periodTitle("month", "2026-11-01", "2026-11-30", "en-GB")).toMatch(/November 2026/);
+    expect(periodTitle("year", "2026-01-01", "2026-12-31", "en-GB")).toBe("2026");
+  });
+  it("shows both years when a week spans the new year", () => {
+    expect(periodTitle("week", "2026-12-28", "2027-01-03", "en-GB")).toMatch(/28 Dec 2026 - 3 Jan 2027/);
   });
 });

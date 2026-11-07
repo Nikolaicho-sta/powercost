@@ -3,7 +3,7 @@
 
 use chrono::{Duration, DurationRound, Utc};
 use cost_engine::TariffSet;
-use dashboard::{dashboard, what_if, CurrentInfo, PeriodKind, WhatIfParams};
+use dashboard::{dashboard_at, what_if, CurrentInfo, DashOptions, PeriodKind, WhatIfParams};
 use estimator::{Estimator, EstimatorConfig, Hardware, Inputs};
 use pc_core::PowerState;
 use rust_decimal::Decimal;
@@ -42,8 +42,13 @@ fn main() {
     );
 
     for (name, kind) in [("today", PeriodKind::Today), ("week", PeriodKind::Week), ("month", PeriodKind::Month), ("year", PeriodKind::Year)] {
-        let d = dashboard(&store, &tariff, kind, now, Some(current.clone())).unwrap();
-        std::fs::write(out.join(format!("dashboard-{name}.json")), serde_json::to_string_pretty(&d).unwrap()).unwrap();
+        // the current period plus a few earlier ones for the preview's back/forward buttons
+        let earlier = if kind == PeriodKind::Today { 14 } else { 3 };
+        for back in 0..=earlier {
+            let d = dashboard_at(&store, &tariff, kind, now, -back, Some(current.clone()), &DashOptions::default()).unwrap();
+            let file = if back == 0 { format!("dashboard-{name}.json") } else { format!("dashboard-{name}-{back}.json") };
+            std::fs::write(out.join(file), serde_json::to_string_pretty(&d).unwrap()).unwrap();
+        }
     }
     let (from, to) = (now - Duration::days(30), now);
     for shift in [0u32, 25, 50, 75, 100] {

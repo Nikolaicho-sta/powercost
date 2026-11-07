@@ -16,4 +16,17 @@ impl Storage {
         }
         Ok(out)
     }
+
+    /// The earliest moment for which anything is stored (minute rows, compacted hours or spans).
+    pub fn earliest_data(&self) -> Result<Option<DateTime<Utc>>> {
+        let ts: Option<i64> = self.conn.query_row(
+            "SELECT MIN(v) FROM (
+                SELECT MIN(minute_ts) AS v FROM usage_cost
+                UNION ALL SELECT MIN(hour_ts) FROM agg_hourly
+                UNION ALL SELECT MIN(start_ts) FROM usage_span)",
+            [],
+            |r| r.get(0),
+        )?;
+        Ok(ts.map(ts_to_dt))
+    }
 }

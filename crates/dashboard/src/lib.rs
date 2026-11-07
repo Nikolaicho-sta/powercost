@@ -53,9 +53,29 @@ fn local_midnight(date: NaiveDate, tz: Tz) -> DateTime<Utc> {
     }
 }
 
+/// A date inside the period that lies `-offset` periods before today's (offset 0 = today's).
+fn shifted_anchor(kind: PeriodKind, today: NaiveDate, offset: i32) -> NaiveDate {
+    let back = (-offset).max(0);
+    match kind {
+        PeriodKind::Today => today - Duration::days(back as i64),
+        PeriodKind::Week => today - Duration::days(7 * back as i64),
+        PeriodKind::Month => {
+            let months = today.year() * 12 + today.month() as i32 - 1 - back;
+            NaiveDate::from_ymd_opt(months.div_euclid(12), months.rem_euclid(12) as u32 + 1, 1).unwrap_or(today)
+        }
+        PeriodKind::Year => NaiveDate::from_ymd_opt(today.year() - back, 1, 1).unwrap_or(today),
+    }
+}
+
 /// Today / this week (Monday start) / this month / this year, in local time.
 pub fn range_for(kind: PeriodKind, now: DateTime<Utc>, tz: Tz) -> Range {
-    let today = now.with_timezone(&tz).date_naive();
+    range_for_offset(kind, now, tz, 0)
+}
+
+/// The same period `-offset` steps back (yesterday, last week, last month, last year...).
+/// Earlier periods are complete: `to` equals `period_end`.
+pub fn range_for_offset(kind: PeriodKind, now: DateTime<Utc>, tz: Tz, offset: i32) -> Range {
+    let today = shifted_anchor(kind, now.with_timezone(&tz).date_naive(), offset);
     let (start, end) = match kind {
         PeriodKind::Today => (today, today.succ_opt().unwrap()),
         PeriodKind::Week => {
@@ -191,6 +211,14 @@ pub struct Dashboard {
     pub fixed_fees: Option<FixedFees>,
     /// Energy cost (+ fixed fees when included), rounded once to minor units.
     pub grand_total_minor: i64,
+    /// 0 = the current period, -1 = the one before, and so on.
+    pub offset: i32,
+    /// First local day of the period shown.
+    pub period_start: NaiveDate,
+    /// Last local day of the period (inclusive), even if it has not happened yet.
+    pub period_end_inclusive: NaiveDate,
+    /// There is recorded data from before this period (so "previous" is worth offering).
+    pub has_earlier: bool,
 }
 
 fn minor_digits(currency: &str) -> u32 {
@@ -331,8 +359,24 @@ pub fn dashboard_with(
     current: Option<CurrentInfo>,
     opts: &DashOptions,
 ) -> Result<Dashboard, DashboardError> {
+    dashboard_at(store, tariff, kind, now, 0, current, opts)
+}
+
+/// The dashboard for the period `-offset` steps back (0 = current). Positive offsets are treated as
+/// 0: the future has no data. The live "now" reading is shown only for the current period.
+pub fn dashboard_at(
+    store: &Storage,
+    tariff: &Tariff,
+    kind: PeriodKind,
+    now: DateTime<Utc>,
+    offset: i32,
+    current: Option<CurrentInfo>,
+    opts: &DashOptions,
+) -> Result<Dashboard, DashboardError> {
+    let offset = offset.min(0);
+    let current = if offset == 0 { current } else { None };
     let tz = tariff.tz();
-    let range = range_for(kind, now, tz);
+    let range = range_for_offset(kind, now, tz, offset);
     let summary = store.summary(range.from, range.to)?;
 
     let by_state = PowerState::ALL
@@ -389,6 +433,10 @@ pub fn dashboard_with(
         current,
         fixed_fees: None,
         grand_total_minor: 0,
+        offset,
+        period_start: range.from.with_timezone(&tz).date_naive(),
+        period_end_inclusive: (range.period_end - Duration::seconds(1)).with_timezone(&tz).date_naive(),
+        has_earlier: store.earliest_data()?.is_some_and(|t| t < range.from),
     };
     d.apply_digits(digits);
     let fees_nano = if opts.include_fixed_fees { fixed_fees_nano(tariff, range.from, range.to) } else { 0 };

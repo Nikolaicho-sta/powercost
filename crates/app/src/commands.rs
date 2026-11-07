@@ -35,14 +35,15 @@ fn refresh_live(state: &AppState, settings: Settings) -> CmdResult<()> {
 }
 
 #[tauri::command(async)]
-pub fn get_dashboard(state: State<AppState>, period: PeriodKind) -> CmdResult<Dashboard> {
+pub fn get_dashboard(state: State<AppState>, period: PeriodKind, offset: Option<i32>) -> CmdResult<Dashboard> {
     let store = open(&state)?;
     let current = lock(&state.shared).current.clone();
     let (tariff, opts) = {
         let l = lock(&state.live);
         (l.tariff.clone(), DashOptions { include_fixed_fees: l.settings.include_fixed_fees })
     };
-    dashboard::dashboard_with(&store, &tariff, period, Utc::now(), current, &opts).map_err(|e| e.to_string())
+    // offset: 0 = the current period, -1 = the one before, ... (never the future)
+    dashboard::dashboard_at(&store, &tariff, period, Utc::now(), offset.unwrap_or(0).clamp(-1200, 0), current, &opts).map_err(|e| e.to_string())
 }
 
 #[tauri::command(async)]

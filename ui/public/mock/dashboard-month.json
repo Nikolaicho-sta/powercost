@@ -1,24 +1,24 @@
 {
   "period": "month",
   "from": "2026-10-31T22:00:00Z",
-  "to": "2026-11-06T18:21:00Z",
+  "to": "2026-11-07T06:48:00Z",
   "currency": "EUR",
   "minor_digits": 2,
   "tariff_name": "Electrohold (Electrohold Prodazhbi) - household, two-zone, regulated",
   "total": {
-    "seconds": 505260,
-    "kwh_nano": 4645029217,
-    "cost_nano": 622700638,
-    "cost_minor": 62
+    "seconds": 550080,
+    "kwh_nano": 4768917069,
+    "cost_nano": 637928442,
+    "cost_minor": 64
   },
   "by_state": [
     {
       "state": "active",
       "amount": {
-        "seconds": 251460,
-        "kwh_nano": 3586545159,
-        "cost_nano": 487532639,
-        "cost_minor": 49
+        "seconds": 262800,
+        "kwh_nano": 3701132825,
+        "cost_nano": 501731035,
+        "cost_minor": 50
       }
     },
     {
@@ -42,9 +42,9 @@
     {
       "state": "off",
       "amount": {
-        "seconds": 100980,
-        "kwh_nano": 28050561,
-        "cost_nano": 3142533,
+        "seconds": 134460,
+        "kwh_nano": 37350747,
+        "cost_nano": 4171941,
         "cost_minor": 0
       }
     }
@@ -54,20 +54,20 @@
       "id": "day",
       "label": "Day",
       "amount": {
-        "seconds": 339660,
-        "kwh_nano": 3733008010,
-        "cost_nano": 538867596,
-        "cost_minor": 54
+        "seconds": 355680,
+        "kwh_nano": 3794617896,
+        "cost_nano": 548370823,
+        "cost_minor": 55
       }
     },
     {
       "id": "night",
       "label": "Night",
       "amount": {
-        "seconds": 165600,
-        "kwh_nano": 912021207,
-        "cost_nano": 83833042,
-        "cost_minor": 8
+        "seconds": 194400,
+        "kwh_nano": 974299173,
+        "cost_nano": 89557619,
+        "cost_minor": 9
       }
     }
   ],
@@ -308,10 +308,10 @@
         {
           "state": "active",
           "amount": {
-            "seconds": 33660,
-            "kwh_nano": 434679833,
-            "cost_nano": 59703148,
-            "cost_minor": 6
+            "seconds": 45000,
+            "kwh_nano": 549267499,
+            "cost_nano": 73901544,
+            "cost_minor": 7
           }
         },
         {
@@ -331,24 +331,43 @@
             "cost_nano": 19412795,
             "cost_minor": 2
           }
+        },
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 1800,
+            "kwh_nano": 500010,
+            "cost_nano": 45960,
+            "cost_minor": 0
+          }
         }
       ],
       "total": {
-        "seconds": 73260,
-        "kwh_nano": 694952332,
-        "cost_nano": 91532752,
-        "cost_minor": 9
+        "seconds": 86400,
+        "kwh_nano": 810040008,
+        "cost_nano": 105777108,
+        "cost_minor": 11
       }
     },
     {
       "start": "2026-11-06T22:00:00Z",
       "local_start": "2026-11-07T00:00:00",
-      "future": true,
-      "by_state": [],
+      "future": false,
+      "by_state": [
+        {
+          "state": "off",
+          "amount": {
+            "seconds": 31680,
+            "kwh_nano": 8800176,
+            "cost_nano": 983448,
+            "cost_minor": 0
+          }
+        }
+      ],
       "total": {
-        "seconds": 0,
-        "kwh_nano": 0,
-        "cost_nano": 0,
+        "seconds": 31680,
+        "kwh_nano": 8800176,
+        "cost_nano": 983448,
         "cost_minor": 0
       }
     },
@@ -630,9 +649,9 @@
     }
   ],
   "confidence": {
-    "measured_sensors_permille": 773,
+    "measured_sensors_permille": 779,
     "calibrated_permille": 0,
-    "default_model_permille": 227
+    "default_model_permille": 221
   },
   "warnings": [],
   "current": {
@@ -645,5 +664,9 @@
     "on_ac": true
   },
   "fixed_fees": null,
-  "grand_total_minor": 62
+  "grand_total_minor": 64,
+  "offset": 0,
+  "period_start": "2026-11-01",
+  "period_end_inclusive": "2026-11-30",
+  "has_earlier": true
 }

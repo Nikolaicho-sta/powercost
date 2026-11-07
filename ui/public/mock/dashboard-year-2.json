@@ -1,0 +1,197 @@
+{
+  "period": "year",
+  "from": "2023-12-31T22:00:00Z",
+  "to": "2024-12-31T22:00:00Z",
+  "currency": "EUR",
+  "minor_digits": 2,
+  "tariff_name": "Electrohold (Electrohold Prodazhbi) - household, two-zone, regulated",
+  "total": {
+    "seconds": 0,
+    "kwh_nano": 0,
+    "cost_nano": 0,
+    "cost_minor": 0
+  },
+  "by_state": [],
+  "by_period": [
+    {
+      "id": "day",
+      "label": "Day",
+      "amount": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "id": "night",
+      "label": "Night",
+      "amount": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    }
+  ],
+  "bucket": "month",
+  "timeline": [
+    {
+      "start": "2023-12-31T22:00:00Z",
+      "local_start": "2024-01-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-01-31T22:00:00Z",
+      "local_start": "2024-02-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-02-29T22:00:00Z",
+      "local_start": "2024-03-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-03-31T21:00:00Z",
+      "local_start": "2024-04-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-04-30T21:00:00Z",
+      "local_start": "2024-05-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-05-31T21:00:00Z",
+      "local_start": "2024-06-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-06-30T21:00:00Z",
+      "local_start": "2024-07-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-07-31T21:00:00Z",
+      "local_start": "2024-08-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-08-31T21:00:00Z",
+      "local_start": "2024-09-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-09-30T21:00:00Z",
+      "local_start": "2024-10-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-10-31T22:00:00Z",
+      "local_start": "2024-11-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    },
+    {
+      "start": "2024-11-30T22:00:00Z",
+      "local_start": "2024-12-01T00:00:00",
+      "future": false,
+      "by_state": [],
+      "total": {
+        "seconds": 0,
+        "kwh_nano": 0,
+        "cost_nano": 0,
+        "cost_minor": 0
+      }
+    }
+  ],
+  "confidence": {
+    "measured_sensors_permille": 0,
+    "calibrated_permille": 0,
+    "default_model_permille": 0
+  },
+  "warnings": [],
+  "current": null,
+  "fixed_fees": null,
+  "grand_total_minor": 0,
+  "offset": -2,
+  "period_start": "2024-01-01",
+  "period_end_inclusive": "2024-12-31",
+  "has_earlier": false
+}

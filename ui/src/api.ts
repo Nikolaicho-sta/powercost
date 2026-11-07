@@ -47,6 +47,12 @@ export interface Dashboard {
   current: Current | null;
   fixed_fees: { cost_nano: number; cost_minor: number } | null;
   grand_total_minor: number;
+  /** 0 = the current period, -1 = the one before, ... */
+  offset: number;
+  /** "YYYY-MM-DD" local dates of the first and last day of the period. */
+  period_start: string;
+  period_end_inclusive: string;
+  has_earlier: boolean;
 }
 export interface Scenario {
   current_cost_nano: number;
@@ -286,8 +292,9 @@ const previewStopwatch = {
 const PREVIEW_ONLY = ["This is the browser preview: saving, validation and exports run inside the PowerCost app."];
 
 export const api = {
-  dashboard: (period: PeriodKind): Promise<Dashboard> =>
-    inTauri ? invoke("get_dashboard", { period }) : mock(`dashboard-${period}.json`),
+  /** `offset` 0 is the current period, -1 the one before, and so on. */
+  dashboard: (period: PeriodKind, offset = 0): Promise<Dashboard> =>
+    inTauri ? invoke("get_dashboard", { period, offset }) : mock(offset === 0 ? `dashboard-${period}.json` : `dashboard-${period}-${-offset}.json`),
 
   whatIf: (params: WhatIfParams, days: number): Promise<WhatIf> => {
     if (inTauri) return invoke("get_what_if", { params, days });

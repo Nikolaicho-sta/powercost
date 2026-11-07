@@ -1,6 +1,6 @@
 {
-  "from": "2026-10-07T18:21:00Z",
-  "to": "2026-11-06T18:21:00Z",
+  "from": "2026-10-08T06:48:00Z",
+  "to": "2026-11-07T06:48:00Z",
   "shutdown_at_night": {
     "current_cost_nano": 234637980,
     "new_cost_nano": 10619904,
@@ -10,12 +10,12 @@
     "hours_affected": 113
   },
   "shift_to_cheap_period": {
-    "current_cost_nano": 2629868157,
-    "new_cost_nano": 1567200108,
-    "saving_nano": 1062668049,
-    "saving_per_year_nano": 12929127930,
+    "current_cost_nano": 2604495564,
+    "new_cost_nano": 1552079983,
+    "saving_nano": 1052415581,
+    "saving_per_year_nano": 12804389569,
     "kwh_saved_nano": 0,
-    "hours_affected": 316
+    "hours_affected": 314
   },
   "cheapest_period": "Night",
   "params": {

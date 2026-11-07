@@ -12,6 +12,7 @@
   "valid_to": null,
   "source_url": "https://www.dker.bg/uploads/reshenia/2026/res-c-13-2026.pdf",
   "last_verified": null,
+  "typical_update": "07-01",
   "verification": "unverified",
   "notes": "UNVERIFIED. Prices 0.12882 day / 0.07688 night EUR/kWh excl. VAT come from a single search-result summary, not from an EVN or EWRC page I could open; by analogy with Electrohold's page they are probably the 'final price incl. network services'. Hours are copied from Electrohold's page (EWRC sets one schedule for all three companies per secondary sources, not confirmed on an EVN page). Verify against EWRC decision Ts-13 of 01.07.2026 before relying on this.",
   "components": [
