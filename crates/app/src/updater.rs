@@ -101,8 +101,8 @@ pub fn check() -> UpdateStatus {
     }
 }
 
-/// Folder mode: run the update script in its own console window (so the user can watch it) and
-/// return at once. The script quits this app itself, after the build.
+/// Folder mode: run the update script and return at once. The script shows its own progress window
+/// (no console), builds while this app keeps running, and quits this app only for the install.
 pub fn start_folder() -> Result<(), String> {
     let source = Path::new(SOURCE_DIR);
     let script = script_path(source);
@@ -112,12 +112,12 @@ pub fn start_folder() -> Result<(), String> {
     #[cfg(windows)]
     {
         use std::os::windows::process::CommandExt;
-        const CREATE_NEW_CONSOLE: u32 = 0x0000_0010;
+        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
         Command::new("powershell.exe")
-            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-File"])
+            .args(["-NoProfile", "-ExecutionPolicy", "Bypass", "-STA", "-WindowStyle", "Hidden", "-File"])
             .arg(&script)
             .current_dir(source)
-            .creation_flags(CREATE_NEW_CONSOLE)
+            .creation_flags(CREATE_NO_WINDOW)
             .spawn()
             .map(|_| ())
             .map_err(|e| format!("could not start the update: {e}"))
