@@ -1,6 +1,6 @@
 @echo off
-rem Double-click to update PowerCost. A small progress window opens; this console closes at once.
-rem For a console instead of the window, run:  "Update PowerCost.cmd" -NoGui
+rem Updates PowerCost. For no flicker at all, double-click "Update PowerCost.vbs" instead.
+rem For console output instead of the progress window, run:  "Update PowerCost.cmd" -NoGui
 echo %* | find /i "-NoGui" >nul
 if not errorlevel 1 (
     powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -File "%~dp0scripts\update.ps1" %*
@@ -8,4 +8,4 @@ if not errorlevel 1 (
     pause
     exit /b
 )
-start "" powershell.exe -NoProfile -ExecutionPolicy Bypass -STA -WindowStyle Hidden -File "%~dp0scripts\update.ps1" %*
+wscript.exe //nologo "%~dp0Update PowerCost.vbs" %*

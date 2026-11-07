@@ -186,7 +186,10 @@ function Ui-Finish([bool]$ok, [string]$message, [string]$logPath) {
 function Invoke-Logged([string]$commandLine, [string]$workDir, [scriptblock]$onChunk) {
     $tmp = Join-Path ([IO.Path]::GetTempPath()) ("powercost-update-" + [guid]::NewGuid().ToString('N') + '.log')
     $args = '/d /s /c "' + $commandLine + ' > "' + $tmp + '" 2>&1"'
-    $p = Start-Process -FilePath $env:ComSpec -ArgumentList $args -WorkingDirectory $workDir -WindowStyle Hidden -PassThru
+    # -NoNewWindow: the command runs in this (hidden or no) console. Without it Windows 11 opens a
+    # visible Windows Terminal window for every console program, even with -WindowStyle Hidden.
+    $p = Start-Process -FilePath $env:ComSpec -ArgumentList $args -WorkingDirectory $workDir -NoNewWindow -PassThru
+    $null = $p.Handle   # keep the process handle: without it ExitCode can come back empty (PowerShell quirk with -NoNewWindow)
     $pos = 0L
     $read = {
         if (Test-Path -LiteralPath $tmp) {
@@ -208,5 +211,6 @@ function Invoke-Logged([string]$commandLine, [string]$workDir, [scriptblock]$onC
     $p.WaitForExit()
     $code = $p.ExitCode
     Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
-    return $code
+    if ($null -eq $code) { throw "could not read the exit code of: $commandLine" }
+    return [int]$code
 }
