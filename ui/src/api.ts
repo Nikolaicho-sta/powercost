@@ -81,6 +81,8 @@ export interface AppInfo {
   version: string;
   tracker_running: boolean;
   sensor_issues: string[];
+  /** e.g. "M8 01fbf4a": which commit this build came from. */
+  build?: string;
   data_dir?: string;
   tariff_note?: string | null;
   autostart_enabled?: boolean;

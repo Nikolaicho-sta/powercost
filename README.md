@@ -25,6 +25,21 @@ Download `PowerCost_<version>_x64-setup.exe` from the build output (see [Build](
 * Starting it a second time simply brings the existing window forward.
 * Uninstalling removes the program and its "Start with Windows" entry. Your data in `%APPDATA%\PowerCost\` is left alone; delete that folder to remove it.
 
+## Update
+
+When this project folder has newer code, **double-click `Update PowerCost.cmd`** (or run `scripts\update.ps1`). It:
+
+1. asks the running PowerCost to quit cleanly (it saves its last minute; nothing is force-killed),
+2. rebuilds the interface and the installer,
+3. installs over the existing install into `%LOCALAPPDATA%\PowerCost` (your data and settings are kept),
+4. starts PowerCost again.
+
+The first build is slow; later ones reuse the cache and take about a minute. Options: `-NoInstall` (build only), `-NoLaunch`, `-DryRun` (show the steps, change nothing), `-InstallDir <folder>`. A log of the last run is written to `update.log`.
+
+If the running copy is an older version that cannot be told to quit, the script asks you to use the tray icon's **Quit PowerCost** and waits. Settings, at the bottom of the page, shows which build you are running (for example `M9 1a2b3c4`).
+
+There is no automatic download of updates: PowerCost never goes online by itself (see [docs/PRIVACY.md](docs/PRIVACY.md)). `powercost.exe --quit` stops a running instance from a command line.
+
 ## Use
 
 | Where | What |

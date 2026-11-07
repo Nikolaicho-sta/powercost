@@ -79,8 +79,11 @@ pub fn run() {
     let args: Vec<String> = std::env::args().collect();
     let simulated = args.iter().any(|a| a == "--sim");
     let start_in_tray = args.iter().any(|a| a == "--tray");
+    // `--quit` only exists to stop a running instance. If no instance runs, this process must exit
+    // at once and must not touch the real data folder.
+    let quit_only = args.iter().any(|a| a == "--quit");
 
-    let dir = data_dir();
+    let dir = if quit_only { std::env::temp_dir().join("PowerCost-quit") } else { data_dir() };
     std::fs::create_dir_all(&dir).expect("data directory");
     let catalog = build_catalog(&dir);
     let default_tariff = catalog.current(&Settings::default().tariff_id, Utc::now().date_naive()).expect("bundled default tariff");
@@ -108,7 +111,15 @@ pub fn run() {
         // Must be the first plugin. A second launch (login autostart plus a manual start, or a
         // double-click on the shortcut) opens the existing instance's window instead of starting
         // a second tracker on the same database.
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| open_main_window(app)));
+        // `powercost.exe --quit` from a second process asks THIS instance to exit cleanly (the update
+        // script uses it so the last minute is saved instead of the process being killed).
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if args.iter().any(|a| a == "--quit") {
+                app.exit(0);
+            } else {
+                open_main_window(app);
+            }
+        }));
     }
     let app = builder
         .plugin(tauri_plugin_notification::init())
@@ -139,6 +150,10 @@ pub fn run() {
             commands::stopwatch_delete,
         ])
         .setup(move |app| {
+            if quit_only {
+                app.handle().exit(0);
+                return Ok(());
+            }
             let menu = MenuBuilder::new(app).text("open", "Open dashboard").separator().text("quit", "Quit PowerCost").build()?;
             TrayIconBuilder::with_id("main")
                 .icon(app.default_window_icon().cloned().expect("window icon"))

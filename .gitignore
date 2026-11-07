@@ -1,4 +1,4 @@
-﻿/target
+/target
 *.db
 *.db-wal
 *.db-shm
@@ -7,3 +7,4 @@ ui/node_modules/
 ui/dist/
 ui/icon-src.png
 crates/app/gen/
+update.log

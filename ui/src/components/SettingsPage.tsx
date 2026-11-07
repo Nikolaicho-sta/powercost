@@ -230,6 +230,12 @@ export function SettingsPage({ info, onSaved, onCalibrate, onOpenTariffs }: { in
         {expMsg && <Notice kind={expMsg.ok ? "ok" : "info"}>{expMsg.text}</Notice>}
       </section>
 
+      <p className="note span-12" style={{ margin: 0 }}>
+        PowerCost {info?.version ?? ""}
+        {info?.build ? ` · build ${info.build}` : ""}
+        {info?.data_dir ? ` · data in ${info.data_dir}` : ""}. To update to a newer version, double-click <b>Update PowerCost.cmd</b> in the project folder.
+      </p>
+
       <div className="savebar span-12">
         {errors.length > 0 && (
           <Notice kind="error">

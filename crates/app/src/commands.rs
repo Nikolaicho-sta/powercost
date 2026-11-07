@@ -59,6 +59,8 @@ pub struct AppInfo {
     simulated: bool,
     preview: bool,
     version: &'static str,
+    /// e.g. "M8 01fbf4a": the commit this build was made from.
+    build: &'static str,
     tracker_running: bool,
     sensor_issues: Vec<String>,
     data_dir: String,
@@ -73,6 +75,7 @@ pub fn get_app_info(state: State<AppState>) -> AppInfo {
         simulated: state.simulated,
         preview: false,
         version: env!("CARGO_PKG_VERSION"),
+        build: env!("POWERCOST_BUILD"),
         tracker_running: shared.tracker_running,
         sensor_issues: shared.issues.clone(),
         data_dir: state.data_dir.display().to_string(),
