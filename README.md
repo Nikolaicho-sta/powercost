@@ -114,7 +114,7 @@ Try the interface without waiting for real data: `powercost.exe --sim`, or in a 
 
 ### Trying it as a brand-new user
 
-Double-click `scripts/fresh-pc-test.wsb` (needs the Windows Sandbox feature: Windows 10/11 Pro, Enterprise or Education, turned on under "Turn Windows features on or off", then a restart). It opens a clean, throw-away Windows (which has no browser) and downloads the newest installer and the older v0.2.0 one onto its Desktop. Nothing is shared with your PC, and everything is deleted when you close the window. To test the update path, install the old one and use Settings → Updates.
+Double-click `scripts/fresh-pc-test.wsb` (needs the Windows Sandbox feature: Windows 10/11 Pro, Enterprise or Education, turned on under "Turn Windows features on or off", then a restart). It opens a clean, throw-away Windows (which has no browser) and downloads the newest installer (the same file the website gives) onto its Desktop. Nothing is shared with your PC, and everything is deleted when you close the window. To test the update path, install it while a newer M release is published, then use Settings → Updates.
 
 ## Project layout
 

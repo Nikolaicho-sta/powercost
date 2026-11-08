@@ -41,7 +41,7 @@ Milestones M0 to M24 are done, committed and pushed to `origin/main` (public rep
 User's laptop: Ryzen 7 8845HS, RTX 4060, Windows 11 (Modern Standby only), Bulgarian locale, Electrohold customer. A Tapo P100 plug exists but cannot measure power (P110/P115 can). Tracker budget: about 25 MB working set and about 0.01% CPU measured.
 
 ## Open items (none requested yet)
-- Publish the first M-numbered release (ask first); the old v0.x releases and the sandbox file that downloads v0.2.0 still point at the retired scheme.
+- (Done) Publish the first M-numbered release; done: M27 published, old v0.x releases deleted, sandbox downloads the latest only.
 - Real in-app GitHub update 0.2.0 to 0.2.1 never run end to end on a real install; the sandbox file exists for this. The new progress window has not been run on the user's own installed copy.
 - No LICENSE file (manifests say MIT; not confirmed with the user). Installer is unsigned (SmartScreen warns).
 - Commits publicly show the author name and email `niki.hristov.junior@gmail.com`.
