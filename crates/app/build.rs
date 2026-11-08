@@ -17,6 +17,12 @@ fn main() {
         _ => "unknown build".to_string(),
     };
     println!("cargo:rustc-env=POWERCOST_BUILD={label}");
+    // The milestone number ("M27" -> 27) of the newest commit: this is the app's only version (D48).
+    // Empty when the commit subject has no M number; the app then cannot compare and says so.
+    let m: String = git(&["log", "-1", "--format=%s"])
+        .and_then(|s| s.strip_prefix('M').map(|r| r.chars().take_while(|c| c.is_ascii_digit()).collect()))
+        .unwrap_or_default();
+    println!("cargo:rustc-env=POWERCOST_M={m}");
     // The full commit and the project folder this build came from. The app compares them with the
     // folder's newest commit to tell you an update is ready (a local check, no network).
     println!("cargo:rustc-env=POWERCOST_COMMIT={}", git(&["rev-parse", "HEAD"]).unwrap_or_default());

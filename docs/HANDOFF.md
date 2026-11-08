@@ -11,15 +11,15 @@ Milestones M0 to M24 are done, committed and pushed to `origin/main` (public rep
 - M7 stopwatch, M8 browsing earlier periods.
 - M9 to M10, M18 to M20: one-click local update (`Update PowerCost.vbs`, `scripts/update.ps1`, `scripts/update-ui.ps1`; fast path replaces the exe instead of running an installer).
 - M11 to M13: download site `site/index.html`, live at https://power-cost.vercel.app (Vercel project `powercost`, deployed through the Vercel MCP with inline files, not git).
-- M14 to M17: updates for other users through GitHub Releases (`crates/app/src/online.rs`), opt-in, SHA-256 verified. Releases: v0.1.0, v0.2.0, v0.2.1 (latest).
+- M14 to M17: updates for other users through GitHub Releases (`crates/app/src/online.rs`), opt-in, SHA-256 verified. Old releases v0.1.0, v0.2.0, v0.2.1 use the retired semver scheme (D48); from M27 on releases are named M<n>.
 - M21 to M23: `scripts/fresh-pc-test.wsb`, a Windows Sandbox config for testing as a new user (the sandbox has no browser; it downloads the installers with PowerShell).
 - M24: `scripts/release.ps1` puts the newest commit's M label in the release notes and title.
 
-**Unreleased:** M18 to M24 are not in any published release (latest is v0.2.1, built at M17). Publishing = bump the version in BOTH `Cargo.toml` and `crates/app/tauri.conf.json`, commit, then `scripts/release.ps1 -Notes "one line"`. Publishing is public: ask the user first.
+**Unreleased:** M18 and later are not in any published release (latest is v0.2.1, built at M17). Publishing = commit (subject `M<n> ...`), then `scripts/release.ps1 -Notes "one line"`. Publishing is public: ask the user first.
 
 ## Update system (two modes, `updater::mode()`)
 - **Folder:** the build still sits next to the project folder with `scripts/update.ps1`. Compares the local `git log` with the embedded commit; no network.
-- **Github:** installed copy without a project folder. Reads `releases/latest`, compares semver, downloads the `*_x64-setup.exe` asset, verifies SHA-256 (from the asset digest or release notes), runs a helper script that installs silently and restarts.
+- **Github:** installed copy without a project folder. Reads `releases/latest`, compares the M number in the tag (M27 = 27) with the one embedded at build time, downloads the `*_x64-setup.exe` asset, verifies SHA-256 (from the asset digest or release notes), runs a helper script that installs silently and restarts.
 - The daily notification-only check (`online_update_check`) is ON by default since M26 (D47, user decision); downloading/installing still needs the "Update now" button. Users only get a notification for releases that are PUBLISHED (version bumped in both manifests + `scripts/release.ps1`), not for commits.
 - Test hook: `POWERCOST_UPDATE_TEST_API=<url>` fakes the release feed.
 
@@ -41,7 +41,7 @@ Milestones M0 to M24 are done, committed and pushed to `origin/main` (public rep
 User's laptop: Ryzen 7 8845HS, RTX 4060, Windows 11 (Modern Standby only), Bulgarian locale, Electrohold customer. A Tapo P100 plug exists but cannot measure power (P110/P115 can). Tracker budget: about 25 MB working set and about 0.01% CPU measured.
 
 ## Open items (none requested yet)
-- Release the unreleased M18 to M24 as 0.2.2 (ask first).
+- Publish the first M-numbered release (ask first); the old v0.x releases and the sandbox file that downloads v0.2.0 still point at the retired scheme.
 - Real in-app GitHub update 0.2.0 to 0.2.1 never run end to end on a real install; the sandbox file exists for this. The new progress window has not been run on the user's own installed copy.
 - No LICENSE file (manifests say MIT; not confirmed with the user). Installer is unsigned (SmartScreen warns).
 - Commits publicly show the author name and email `niki.hristov.junior@gmail.com`.

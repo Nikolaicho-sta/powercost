@@ -58,7 +58,7 @@ pub fn get_what_if(state: State<AppState>, params: WhatIfParams, days: u32) -> C
 pub struct AppInfo {
     simulated: bool,
     preview: bool,
-    version: &'static str,
+    version: String,
     /// e.g. "M8 01fbf4a": the commit this build was made from.
     build: &'static str,
     /// "folder" (built from a project folder that still exists) or "github" (updates come from GitHub Releases).
@@ -76,7 +76,7 @@ pub fn get_app_info(state: State<AppState>) -> AppInfo {
     AppInfo {
         simulated: state.simulated,
         preview: false,
-        version: env!("CARGO_PKG_VERSION"),
+        version: crate::online::built_label(),
         build: env!("POWERCOST_BUILD"),
         update_mode: crate::updater::mode(),
         tracker_running: shared.tracker_running,

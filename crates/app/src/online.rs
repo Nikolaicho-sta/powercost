@@ -66,8 +66,27 @@ pub struct Offer {
     pub size: u64,
 }
 
-pub fn parse_version(tag: &str) -> Option<semver::Version> {
-    semver::Version::parse(tag.trim().trim_start_matches(['v', 'V'])).ok()
+/// The milestone number in a release tag: "M27" -> 27. Releases are numbered only by milestone
+/// (D48); there is no semantic version.
+pub fn parse_m(tag: &str) -> Option<u32> {
+    let digits = tag.trim().strip_prefix(['M', 'm'])?;
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    digits.parse().ok()
+}
+
+/// The milestone this build was made from (the newest commit's "M<n>" at build time), 0 if unknown.
+pub fn built_m() -> u32 {
+    env!("POWERCOST_M").parse().unwrap_or(0)
+}
+
+/// "M27", or "" when this build does not know its milestone.
+pub fn built_label() -> String {
+    match built_m() {
+        0 => String::new(),
+        n => format!("M{n}"),
+    }
 }
 
 fn is_sha256(s: &str) -> bool {
@@ -96,15 +115,18 @@ pub fn url_allowed(url: &str, test_mode: bool) -> bool {
 }
 
 /// `Ok(None)`: nothing newer. `Err`: a newer release exists but cannot be installed safely.
-pub fn evaluate(current: &str, release: &Release, test_mode: bool) -> Result<Option<Offer>, String> {
+pub fn evaluate(current: u32, release: &Release, test_mode: bool) -> Result<Option<Offer>, String> {
     if release.draft || release.prerelease {
         return Ok(None);
     }
-    let latest = parse_version(&release.tag_name).ok_or_else(|| format!("the latest release has an unreadable version ({})", release.tag_name))?;
-    let current = parse_version(current).ok_or_else(|| format!("this app has an unreadable version ({current})"))?;
+    let latest = parse_m(&release.tag_name).ok_or_else(|| format!("the latest release has an unreadable name ({})", release.tag_name))?;
+    if current == 0 {
+        return Err("this build does not know which M release it is, so it cannot compare".into());
+    }
     if latest <= current {
         return Ok(None);
     }
+    let latest = format!("M{latest}");
     let asset = installer_asset(release).ok_or_else(|| format!("release {latest} has no Windows installer attached"))?;
     if !url_allowed(&asset.browser_download_url, test_mode) {
         return Err(format!("release {latest} points to an unexpected download address"));
@@ -121,7 +143,7 @@ pub fn installer_asset(release: &Release) -> Option<&Asset> {
 }
 
 fn agent() -> ureq::Agent {
-    ureq::AgentBuilder::new().timeout(Duration::from_secs(30)).user_agent(concat!("PowerCost/", env!("CARGO_PKG_VERSION"))).build()
+    ureq::AgentBuilder::new().timeout(Duration::from_secs(30)).user_agent(concat!("PowerCost/M", env!("POWERCOST_M"))).build()
 }
 
 pub fn fetch_release() -> Result<Release, String> {
@@ -140,7 +162,7 @@ pub fn fetch_release() -> Result<Release, String> {
 /// Ask GitHub whether a newer release exists.
 pub fn check() -> Result<Option<Offer>, String> {
     let release = fetch_release()?;
-    evaluate(env!("CARGO_PKG_VERSION"), &release, test_api().is_some())
+    evaluate(built_m(), &release, test_api().is_some())
 }
 
 pub fn update_dir() -> PathBuf {
@@ -272,86 +294,90 @@ mod tests {
     }
 
     #[test]
-    fn versions_parse_with_or_without_v() {
-        assert_eq!(parse_version("v0.2.0"), semver::Version::parse("0.2.0").ok());
-        assert_eq!(parse_version("0.10.1"), semver::Version::parse("0.10.1").ok());
-        assert!(parse_version("latest").is_none());
+    fn m_numbers_parse() {
+        assert_eq!(parse_m("M27"), Some(27));
+        assert_eq!(parse_m(" m5 "), Some(5));
+        assert_eq!(parse_m("v0.2.0"), None);
+        assert_eq!(parse_m("M"), None);
+        assert_eq!(parse_m("M2x"), None);
+        assert_eq!(parse_m("latest"), None);
     }
 
     #[test]
     fn newer_release_is_offered_older_or_equal_is_not() {
-        let r = release("v0.2.0", "PowerCost_0.2.0_x64-setup.exe", Some(&format!("sha256:{HEX}")), "Faster\nmore");
-        let offer = evaluate("0.1.0", &r, false).unwrap().unwrap();
-        assert_eq!(offer.version, "0.2.0");
+        let r = release("M27", "PowerCost_27.0.0_x64-setup.exe", Some(&format!("sha256:{HEX}")), "Faster\nmore");
+        let offer = evaluate(1, &r, false).unwrap().unwrap();
+        assert_eq!(offer.version, "M27");
         assert_eq!(offer.subject, "Faster");
         assert_eq!(offer.sha256, HEX);
-        assert!(evaluate("0.2.0", &r, false).unwrap().is_none());
-        assert!(evaluate("0.10.0", &r, false).unwrap().is_none(), "0.10 is newer than 0.2, not older");
-        assert!(evaluate("0.1.9", &release("v0.1.10", "x_x64-setup.exe", Some(HEX), ""), false).unwrap().is_some(), "0.1.10 is newer than 0.1.9");
+        assert!(evaluate(27, &r, false).unwrap().is_none());
+        assert!(evaluate(100, &r, false).unwrap().is_none(), "M100 is newer than M27, not older");
+        assert!(evaluate(9, &release("M10", "x_x64-setup.exe", Some(HEX), ""), false).unwrap().is_some(), "M10 is newer than M9");
+        assert!(evaluate(0, &r, false).is_err(), "a build that does not know its M number cannot compare");
     }
 
     #[test]
     fn a_byte_order_mark_in_the_notes_does_not_reach_the_summary() {
-        let r = release("v0.2.0", "a_x64-setup.exe", Some(HEX), "\u{feff}Summary line\r\nmore");
-        assert_eq!(evaluate("0.1.0", &r, false).unwrap().unwrap().subject, "Summary line");
+        let r = release("M27", "a_x64-setup.exe", Some(HEX), "\u{feff}Summary line\r\nmore");
+        assert_eq!(evaluate(1, &r, false).unwrap().unwrap().subject, "Summary line");
     }
 
     #[test]
     fn drafts_and_prereleases_are_ignored() {
-        let mut r = release("v9.0.0", "a_x64-setup.exe", Some(HEX), "");
+        let mut r = release("M99", "a_x64-setup.exe", Some(HEX), "");
         r.prerelease = true;
-        assert!(evaluate("0.1.0", &r, false).unwrap().is_none());
+        assert!(evaluate(1, &r, false).unwrap().is_none());
         r.prerelease = false;
         r.draft = true;
-        assert!(evaluate("0.1.0", &r, false).unwrap().is_none());
+        assert!(evaluate(1, &r, false).unwrap().is_none());
     }
 
     #[test]
     fn checksum_comes_from_the_digest_or_from_the_release_notes() {
-        let name = "PowerCost_0.2.0_x64-setup.exe";
-        let a = release("v0.2.0", name, Some(&format!("sha256:{}", HEX.to_uppercase())), "");
+        let name = "PowerCost_27.0.0_x64-setup.exe";
+        let a = release("M27", name, Some(&format!("sha256:{}", HEX.to_uppercase())), "");
         assert_eq!(expected_sha256(&a, &a.assets[0]).as_deref(), Some(HEX));
         let notes = format!("SHA-256 of `{name}`:\n`{HEX}`\n");
-        let b = release("v0.2.0", name, None, &notes);
+        let b = release("M27", name, None, &notes);
         assert_eq!(expected_sha256(&b, &b.assets[0]).as_deref(), Some(HEX));
         // a hash that belongs to another file name must not be used
-        let c = release("v0.2.0", name, None, &format!("SHA-256 of other.exe: {HEX}"));
+        let c = release("M27", name, None, &format!("SHA-256 of other.exe: {HEX}"));
         assert_eq!(expected_sha256(&c, &c.assets[0]), None);
-        let d = release("v0.2.0", name, Some("sha256:abc"), "no checksum here");
+        let d = release("M27", name, Some("sha256:abc"), "no checksum here");
         assert_eq!(expected_sha256(&d, &d.assets[0]), None);
     }
 
     #[test]
     fn a_release_without_checksum_or_installer_is_an_error_not_an_update() {
-        let no_sum = release("v0.2.0", "PowerCost_0.2.0_x64-setup.exe", None, "nothing");
-        assert!(evaluate("0.1.0", &no_sum, false).is_err());
-        let no_installer = release("v0.2.0", "notes.txt", Some(HEX), "");
-        assert!(evaluate("0.1.0", &no_installer, false).is_err());
+        let no_sum = release("M27", "PowerCost_27.0.0_x64-setup.exe", None, "nothing");
+        assert!(evaluate(1, &no_sum, false).is_err());
+        let no_installer = release("M27", "notes.txt", Some(HEX), "");
+        assert!(evaluate(1, &no_installer, false).is_err());
     }
 
     #[test]
     fn only_this_projects_release_downloads_are_allowed() {
-        assert!(url_allowed("https://github.com/Nikolaicho-sta/powercost/releases/download/v0.2.0/a_x64-setup.exe", false));
+        assert!(url_allowed("https://github.com/Nikolaicho-sta/powercost/releases/download/M27/a_x64-setup.exe", false));
         assert!(!url_allowed("https://evil.example/powercost/a_x64-setup.exe", false));
         assert!(!url_allowed("https://github.com/someone-else/powercost/releases/download/v1/a_x64-setup.exe", false));
         assert!(url_allowed("http://127.0.0.1:9/a_x64-setup.exe", true));
-        let mut r = release("v0.2.0", "a_x64-setup.exe", Some(HEX), "");
+        let mut r = release("M27", "a_x64-setup.exe", Some(HEX), "");
         r.assets[0].browser_download_url = "https://evil.example/a_x64-setup.exe".into();
-        assert!(evaluate("0.1.0", &r, false).is_err());
+        assert!(evaluate(1, &r, false).is_err());
     }
 
     #[test]
     fn real_github_json_shape_parses() {
-        let json = r#"{"tag_name":"v0.2.0","name":"PowerCost 0.2.0","draft":false,"prerelease":false,"body":"Notes","extra":1,
-            "assets":[{"name":"PowerCost_0.2.0_x64-setup.exe","size":3597834,"browser_download_url":"https://github.com/Nikolaicho-sta/powercost/releases/download/v0.2.0/PowerCost_0.2.0_x64-setup.exe","digest":"sha256:5d8fd897171b1d3baba6dba4fb63710595681392a9651437885197b179372f08","download_count":3}]}"#;
+        let json = r#"{"tag_name":"M27","name":"PowerCost M27","draft":false,"prerelease":false,"body":"Notes","extra":1,
+            "assets":[{"name":"PowerCost_27.0.0_x64-setup.exe","size":3597834,"browser_download_url":"https://github.com/Nikolaicho-sta/powercost/releases/download/M27/PowerCost_27.0.0_x64-setup.exe","digest":"sha256:5d8fd897171b1d3baba6dba4fb63710595681392a9651437885197b179372f08","download_count":3}]}"#;
         let r: Release = serde_json::from_str(json).unwrap();
-        assert!(evaluate("0.1.0", &r, false).unwrap().is_some());
+        assert!(evaluate(1, &r, false).unwrap().is_some());
     }
 
     #[test]
     fn download_rejects_bad_names_and_wrong_checksums() {
         let dir = std::env::temp_dir().join(format!("pc-online-test-{}", std::process::id()));
-        let bad = Offer { version: "0.2.0".into(), subject: String::new(), url: "http://127.0.0.1:1/x".into(), name: "..\\evil.exe".into(), sha256: HEX.into(), size: 0 };
+        let bad = Offer { version: "M27".into(), subject: String::new(), url: "http://127.0.0.1:1/x".into(), name: "..\\evil.exe".into(), sha256: HEX.into(), size: 0 };
         assert!(download(&bad, &dir).is_err());
         let _ = std::fs::remove_dir_all(&dir);
     }

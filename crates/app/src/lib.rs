@@ -113,7 +113,9 @@ fn spawn_update_checker(app: AppHandle) {
                 if let updater::UpdateStatus::Available { id, label, subject, .. } = status {
                     let marker = state.data_dir.join("update_notified.txt");
                     if std::fs::read_to_string(&marker).map(|s| s.trim() != id).unwrap_or(true) {
-                        let body = format!("{label}: {subject} Open PowerCost, Settings, and press \"Update now\".");
+                        // release notes already start with "M27: ...", don't repeat the label
+                        let what = if subject.starts_with(&label) { subject.clone() } else { format!("{label}: {subject}") };
+                        let body = format!("{what} Open PowerCost, Settings, and press \"Update now\".");
                         if app.notification().builder().title("PowerCost update available").body(body).show().is_ok() {
                             let _ = std::fs::write(&marker, &id);
                         }

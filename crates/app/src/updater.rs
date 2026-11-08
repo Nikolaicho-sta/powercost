@@ -95,7 +95,7 @@ pub fn check() -> UpdateStatus {
         UpdateSource::Folder => decide(BUILT_COMMIT, latest_commit(Path::new(SOURCE_DIR))),
         UpdateSource::Github => match online::check() {
             Ok(None) => UpdateStatus::UpToDate,
-            Ok(Some(o)) => UpdateStatus::Available { source: UpdateSource::Github, id: o.version.clone(), label: format!("version {}", o.version), subject: o.subject },
+            Ok(Some(o)) => UpdateStatus::Available { source: UpdateSource::Github, id: o.version.clone(), label: o.version.clone(), subject: o.subject },
             Err(reason) => UpdateStatus::Unavailable { reason },
         },
     }
@@ -157,7 +157,7 @@ mod tests {
 
     #[test]
     fn status_serialises_for_the_ui() {
-        let s = serde_json::to_value(UpdateStatus::Available { source: UpdateSource::Github, id: "0.2.0".into(), label: "version 0.2.0".into(), subject: "x".into() }).unwrap();
+        let s = serde_json::to_value(UpdateStatus::Available { source: UpdateSource::Github, id: "M27".into(), label: "M27".into(), subject: "x".into() }).unwrap();
         assert_eq!(s["state"], "available");
         assert_eq!(s["source"], "github");
     }
