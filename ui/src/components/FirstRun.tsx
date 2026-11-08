@@ -27,7 +27,7 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
   const [wall, setWall] = useState(false);
   // Automatic update check is a network call, so it starts unticked and is only offered when this
   // copy updates from GitHub (a copy built from a project folder checks locally).
-  const [autoUpdate, setAutoUpdate] = useState(false);
+  const [autoUpdate, setAutoUpdate] = useState(true);
   const [githubUpdates, setGithubUpdates] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -172,10 +172,10 @@ export function FirstRunWizard({ initial, onDone }: { initial: Settings; onDone:
           <Check label="I switch the PC off at the wall when it is shut down (0 W)" checked={wall} onChange={setWall} />
           {githubUpdates && (
             <div className="optin">
-              <Check label="Tell me when a new version is available (optional)" checked={autoUpdate} onChange={setAutoUpdate} />
+              <Check label="Tell me when a new version is available" checked={autoUpdate} onChange={setAutoUpdate} />
               <p className="note">
-                If you tick this, PowerCost asks github.com about once a day whether a newer release exists and shows a notification. GitHub sees your IP address as any website would; nothing about you or your usage is sent.
-                Leave it unticked and nothing goes online until you press "Check for updates" in Settings.
+                PowerCost asks github.com about once a day whether a newer release exists and shows a notification. It never downloads or installs anything by itself. GitHub sees your IP address as any website would; nothing about you or your usage is sent.
+                Untick it and nothing goes online until you press "Check for updates" in Settings.
               </p>
             </div>
           )}

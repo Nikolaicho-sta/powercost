@@ -243,7 +243,7 @@ export function SettingsPage({ info, update, onUpdate, onSaved, onCalibrate, onO
               label="Look for updates automatically (about once a day)"
               checked={draft.online_update_check}
               onChange={(v) => upd((d) => (d.online_update_check = v))}
-              help="Off by default. When on, PowerCost asks github.com once a day whether a newer release exists and shows a notification. It sends nothing about you or your usage. Remember to press Save settings."
+              help="On by default. PowerCost asks github.com once a day whether a newer release exists and shows a notification; it never installs anything by itself and sends nothing about you or your usage. Untick to stop it, then press Save settings."
             />
           </div>
         )}

@@ -82,8 +82,9 @@ pub struct Settings {
     pub theme: Theme,
     /// How long minute-level detail is kept before it is compacted into hourly/daily totals.
     pub detail_retention_days: u32,
-    /// Look for a newer release on GitHub about once a day (a network call, so OFF by default).
-    /// Pressing "Check for updates" always works; this only controls the automatic check.
+    /// Look for a newer release on GitHub about once a day and show a notification (a network call;
+    /// ON by default at the user's decision, disclosed in the wizard/Settings/PRIVACY.md, one switch
+    /// turns it off). Pressing "Check for updates" always works; this only controls the automatic check.
     pub online_update_check: bool,
 }
 
@@ -101,7 +102,7 @@ impl Default for Settings {
             autostart: false,
             theme: Theme::System,
             detail_retention_days: 90,
-            online_update_check: false,
+            online_update_check: true,
         }
     }
 }

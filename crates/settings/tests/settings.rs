@@ -21,7 +21,7 @@ fn defaults_are_valid_and_privacy_friendly() {
     assert!(!s.include_fixed_fees, "fixed fees are excluded by default");
     assert!(!s.estimator.include_monitor, "monitor is off by default");
     assert!(!s.autostart && !s.first_run_done && s.budget.is_none());
-    assert!(!s.online_update_check, "the network update check must be opt-in");
+    assert!(s.online_update_check, "update notifications are on by default (user decision, D47)");
 }
 
 #[test]

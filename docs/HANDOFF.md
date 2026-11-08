@@ -20,7 +20,7 @@ Milestones M0 to M24 are done, committed and pushed to `origin/main` (public rep
 ## Update system (two modes, `updater::mode()`)
 - **Folder:** the build still sits next to the project folder with `scripts/update.ps1`. Compares the local `git log` with the embedded commit; no network.
 - **Github:** installed copy without a project folder. Reads `releases/latest`, compares semver, downloads the `*_x64-setup.exe` asset, verifies SHA-256 (from the asset digest or release notes), runs a helper script that installs silently and restarts.
-- Network is opt-in only: the user presses a button, or ticks "look for updates automatically" (`online_update_check`, default off).
+- The daily notification-only check (`online_update_check`) is ON by default since M26 (D47, user decision); downloading/installing still needs the "Update now" button. Users only get a notification for releases that are PUBLISHED (version bumped in both manifests + `scripts/release.ps1`), not for commits.
 - Test hook: `POWERCOST_UPDATE_TEST_API=<url>` fakes the release feed.
 
 ## Conventions the user set

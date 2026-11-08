@@ -29,7 +29,7 @@ Download `PowerCost_<version>_x64-setup.exe` from the build output (see [Build](
 
 ## Update
 
-**If you installed PowerCost from a release** (the normal case): open **Settings → Updates** and press **Check for updates**. If a newer release exists, press **Update now**: PowerCost downloads the installer from the project's GitHub release, verifies its SHA-256 against the checksum published with the release, closes, installs over itself (your data is kept) and starts again. This contacts github.com only when you press the button, or once a day if you switch on "Look for updates automatically" in Settings (off by default); see [docs/PRIVACY.md](docs/PRIVACY.md). The installer is not code-signed, so the checksum protects against a corrupted download, not against a compromised GitHub account.
+**If you installed PowerCost from a release** (the normal case): open **Settings → Updates** and press **Check for updates**. If a newer release exists, press **Update now**: PowerCost downloads the installer from the project's GitHub release, verifies its SHA-256 against the checksum published with the release, closes, installs over itself (your data is kept) and starts again. This contacts github.com only when you press the button, or once a day for a notification-only check while "Look for updates automatically" is on in Settings (on by default, untick to stop it); see [docs/PRIVACY.md](docs/PRIVACY.md). The installer is not code-signed, so the checksum protects against a corrupted download, not against a compromised GitHub account.
 
 **Publishing an update (maintainer):** bump `version` in `Cargo.toml` and `crates/app/tauri.conf.json`, commit, then run `scripts\release.ps1 -Notes "One-line summary"` (it builds the installer and creates the GitHub release; the first line of the notes is what users see in the app). Installed copies pick it up from there.
 
@@ -50,7 +50,7 @@ For speed, this build uses quicker compiler settings than the published installe
 
 If the running copy is an older version that cannot be told to quit, the script asks you to use the tray icon's **Quit PowerCost** and waits. Settings, at the bottom of the page, shows which build you are running (for example `M9 1a2b3c4`).
 
-There is no automatic download of updates: PowerCost never goes online by itself (see [docs/PRIVACY.md](docs/PRIVACY.md)). `powercost.exe --quit` stops a running instance from a command line.
+There is no automatic download of updates: PowerCost only checks once a day whether a new release exists and shows a notification (see [docs/PRIVACY.md](docs/PRIVACY.md)). `powercost.exe --quit` stops a running instance from a command line.
 
 ## Use
 

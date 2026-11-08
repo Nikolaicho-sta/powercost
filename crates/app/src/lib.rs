@@ -79,8 +79,8 @@ pub(crate) fn update_tray(app: &AppHandle, text: &str) {
 
 /// Background update check; shows ONE Windows notification per new update.
 /// * Folder mode: a local `git log` about a minute after start, then every 6 hours. No network.
-/// * GitHub mode: only when the user turned on "check for updates automatically" in Settings (off by
-///   default, it is a network call): about once a day. Pressing "Check for updates" always works.
+/// * GitHub mode: about once a day while "look for updates automatically" is on in Settings (on by
+///   default, it is a network call and can be switched off). Pressing "Check for updates" always works.
 fn spawn_update_checker(app: AppHandle) {
     use tauri_plugin_notification::NotificationExt;
     let _ = std::thread::Builder::new().name("update-check".into()).spawn(move || {

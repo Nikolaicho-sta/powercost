@@ -118,14 +118,14 @@ footer { border-top: 1px solid var(--grid); margin-top: 20px; padding: 24px 0 40
           <li>PowerShell: <code>Get-FileHash .\PowerCost-setup.exe</code></li>
         </ul>
       </div>
-      <p class="sub" style="margin-top:14px"><b>Requirements:</b> Windows 10 or 11 (64-bit). The Microsoft Edge WebView2 runtime is built into Windows 11; on Windows 10 the installer fetches it if it is missing. <b>Updating:</b> in PowerCost open Settings, then Updates, and press "Check for updates" and "Update now". It downloads the new installer from GitHub, verifies its checksum and installs it over the old one; your data in <code>%APPDATA%\PowerCost</code> is kept. Automatic checks are off unless you switch them on. <b>Uninstall:</b> Windows Settings, Apps. There is no Linux or macOS version yet.</p>
+      <p class="sub" style="margin-top:14px"><b>Requirements:</b> Windows 10 or 11 (64-bit). The Microsoft Edge WebView2 runtime is built into Windows 11; on Windows 10 the installer fetches it if it is missing. <b>Updating:</b> in PowerCost open Settings, then Updates, and press "Check for updates" and "Update now". It downloads the new installer from GitHub, verifies its checksum and installs it over the old one; your data in <code>%APPDATA%\PowerCost</code> is kept. PowerCost also checks once a day and shows a notification when a new version is out (it never installs anything by itself); you can switch this off in Settings. <b>Uninstall:</b> Windows Settings, Apps. There is no Linux or macOS version yet.</p>
     </section>
 
     <section id="privacy">
       <h2>Private by design</h2>
       <div class="grid">
         <div class="card"><h3>Stays on your PC</h3><p>All data lives in <code>%APPDATA%\PowerCost</code>. Nothing is uploaded: no account, no analytics, no crash reporting.</p></div>
-        <div class="card"><h3>Offline unless you ask</h3><p>The app goes online only when you press "Check for updates" or "Update now", or if you switch on the daily update check (off by default), and for an optional country lookup in the setup wizard, also off by default. Tariff prices are never downloaded.</p></div>
+        <div class="card"><h3>Offline unless you ask</h3><p>The only thing the app does online by itself is a daily check for a newer release, which shows a notification (on by default, one switch turns it off in Settings). Updates are downloaded only when you press "Update now". The optional country lookup in the setup wizard is off by default. Tariff prices are never downloaded.</p></div>
         <div class="card"><h3>Open source</h3><p>The full code and a plain-language <a href="https://github.com/Nikolaicho-sta/powercost/blob/main/docs/PRIVACY.md">privacy page</a> are on GitHub, along with the <a href="https://github.com/Nikolaicho-sta/powercost/blob/main/docs/DECISIONS.md">reasoning behind each design choice</a>.</p></div>
       </div>
     </section>

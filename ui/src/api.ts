@@ -227,7 +227,7 @@ function previewDefaults(): Settings {
     autostart: false,
     theme: "system",
     detail_retention_days: 90,
-    online_update_check: false,
+    online_update_check: true,
   };
 }
 
