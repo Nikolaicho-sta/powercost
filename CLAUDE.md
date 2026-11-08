@@ -21,5 +21,11 @@ using the electricity prices of the user's region.
 
 ## Conventions
 - Write tests for all cost/tariff/gap-detection logic before the UI.
-- Small commits, conventional commit messages.
+- Small commits. Commit subjects are `M<n> <what was added>` (e.g. `M7 Stopwatch`), not
+  conventional commits (the user's rule); the body describes the change.
 - Keep a docs/DECISIONS.md with the reasoning behind each major choice.
+
+## Start here (new session)
+Read `docs/HANDOFF.md` first: current state, update system, user rules (never touch the user's
+real app data or running process; ask before downloads, installs or publishing), build/test
+commands and open items. `PowerCost/` at the repo root is a stray nested clone: ignore it.
