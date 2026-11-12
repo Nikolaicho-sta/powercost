@@ -51,7 +51,17 @@ fn data_dir() -> PathBuf {
 }
 
 /// Fill (or reuse) a simulated database so the UI can be tried without waiting for real data.
-fn prepare_simulation(tariff: &Tariff) -> Result<PathBuf, String> {
+fn prepare_simulation(tariff: &Tariff, first_run: bool) -> Result<PathBuf, String> {
+    if first_run {
+        // `--sim --first-run`: what a brand-new user sees (empty database, setup wizard), with no
+        // tracker, no single-instance forwarding and no autostart changes, so it is safe to run
+        // next to the real app.
+        let path = std::env::temp_dir().join("powercost-firstrun.db");
+        let _ = std::fs::remove_file(&path);
+        let store = Storage::open(&path).map_err(|e| e.to_string())?;
+        Settings::default().save(&store).map_err(|e| e.join("; "))?;
+        return Ok(path);
+    }
     let path = std::env::temp_dir().join("powercost-sim.db");
     let fresh = std::fs::metadata(&path).and_then(|m| m.modified()).ok().and_then(|t| t.elapsed().ok()).is_some_and(|age| age.as_secs() < 12 * 3600);
     if fresh {
@@ -142,7 +152,7 @@ pub fn run() {
     let catalog = build_catalog(&dir);
     let default_tariff = catalog.current(&Settings::default().tariff_id, Utc::now().date_naive()).expect("bundled default tariff");
 
-    let db_path = if simulated { prepare_simulation(&default_tariff).expect("simulation database") } else { dir.join("powercost.db") };
+    let db_path = if simulated { prepare_simulation(&default_tariff, args.iter().any(|a| a == "--first-run")).expect("simulation database") } else { dir.join("powercost.db") };
     let settings = {
         let store = Storage::open(&db_path).expect("database");
         Settings::load(&store).unwrap_or_default()

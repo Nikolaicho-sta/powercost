@@ -35,7 +35,7 @@ Milestones M0 to M24 are done, committed and pushed to `origin/main` (public rep
 - `cargo test` (workspace default members skip the Tauri crate). Building `crates/app` needs `npm run build` in `ui/` first. `cargo clippy --workspace --all-targets`; `npm test` in `ui/`.
 - Installer: `crates/app` then `..\..\ui\node_modules\.bin\tauri build` (output in `target/release/bundle/nsis/`).
 - Quick local build used by the updater: `cargo build --release -p powercost --features tauri/custom-protocol`.
-- Try the UI with demo data: `powercost.exe --sim`.
+- Try the UI with demo data: `powercost.exe --sim`. See what a brand-new user sees (empty database, setup wizard): `powercost.exe --sim --first-run`; add `POWERCOST_UPDATE_TEST_API` to show the GitHub-mode update checkbox. Both are safe next to the real app.
 
 ## Reference machine
 User's laptop: Ryzen 7 8845HS, RTX 4060, Windows 11 (Modern Standby only), Bulgarian locale, Electrohold customer. A Tapo P100 plug exists but cannot measure power (P110/P115 can). Tracker budget: about 25 MB working set and about 0.01% CPU measured.
